@@ -336,8 +336,22 @@ class Window(object):
     def set_layout(self, layout):
         sublime_api.window_set_layout(self.window_id, layout)
 
-    def create_output_panel(self, name):
-        return View(sublime_api.window_create_output_panel(self.window_id, name))
+    def create_output_panel(self, name, unlisted=False):
+        return View(sublime_api.window_create_output_panel(self.window_id, name, unlisted))
+
+    def find_output_panel(self, name):
+        view_id = sublime_api.window_find_output_panel(self.window_id, name)
+        return View(view_id) if view_id else None
+
+    def destroy_output_panel(self, name):
+        sublime_api.window_destroy_output_panel(self.window_id, name)
+
+    def active_panel(self):
+        name = sublime_api.window_active_panel(self.window_id)
+        return name or None
+
+    def panels(self):
+        return sublime_api.window_panels(self.window_id)
 
     def get_output_panel(self, name):
         """ deprecated, use create_output_panel """

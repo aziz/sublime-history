@@ -6,6 +6,17 @@ h2 { color: #333; font-size: 2.0em; margin: 0; }
 .release-date, .forum-link { font-size: 10pt }
 </style>
 
+<h2>Build 3101</h2>
+<div class="release-date">Release Date: 5 February 2016</div>
+<ul>
+    <li>Added Panel Switcher to status bar</li>
+    <li>Sublime Text is more proactive about polling for file changes, rather than waiting for file system change notifications</li>
+    <li>Fixed regression in regular expressions with upper case escape sequences</li>
+    <li>Fixed regression in regular expression format strings</li>
+    <li>API: Added find_output_panel(), destroy_output_panel(), active_panel() and panels()</li>
+    <li>API: Added create_output_panel() now accepts an optional parameter, <tt>"unlisted"</tt></li>
+</ul>
+
 <h2>Build 3100</h2>
 <div class="release-date">Release Date: 3 February 2016</div>
 <ul>
