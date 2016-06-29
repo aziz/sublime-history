@@ -115,7 +115,7 @@
 			<key>name</key>
 			<string>Keyword</string>
 			<key>scope</key>
-			<string>keyword - keyword.operator, keyword.operator.word</string>
+			<string>keyword - (source.c keyword.operator | source.c++ keyword.operator | source.objc keyword.operator | source.objc++ keyword.operator), keyword.operator.word</string>
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
