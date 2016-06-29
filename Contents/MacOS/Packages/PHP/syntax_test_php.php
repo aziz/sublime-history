@@ -3,97 +3,146 @@
 namespace MyNamespace;
 // <- keyword.other.namespace
 //        ^^^^^^^^^^^ entity.name.namespace
-//                   ^ - entity.name.namespace
+//                   ^ punctuation.terminator.expression.php - entity.name.namespace
 
 use MyNamespace\Foo;
 // <- keyword.other.use
 //^^^^^^^^^^^^^^^^^ meta.use
-//  ^ support.other.namespace
+//  ^^^^^^^^^^^ support.other.namespace
 //             ^ punctuation.separator.namespace
-//              ^ - constant.other
+//              ^^^ support.class.php - constant.other - entity.name - support.function.php - support.other.namespace
+//                 ^ punctuation.terminator.expression.php - meta.use
 
 use /* Comment */ \MyNamespace\Foo;
 // <- keyword.other.use
 //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.use
 //  ^^^^^^^^^^^^^ comment.block
 //                ^ punctuation.separator.namespace
-//                 ^ support.other.namespace
+//                 ^^^^^^^^^^^ support.other.namespace
 //                            ^ punctuation.separator.namespace
-//                             ^ - constant.other
+//                             ^^^ support.class.php - constant.other - entity.name - support.function.php - support.other.namespace
+//                                ^ punctuation.terminator.expression.php - meta.use
 
 use My\Full\Classname as /**/ Another # Foo baz
 // <- keyword.other.use
-//^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.use
-//  ^ support.other.namespace
+//^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.use
+//  ^^ support.other.namespace
+//    ^ punctuation.separator.namespace
+//     ^^^^ support.other.namespace
 //         ^ punctuation.separator.namespace
-//          ^ - constant.other
-//                    ^ keyword.other.use-as
+//          ^^^^^^^^^ support.class.php - constant.other - entity.name - support.function.php - support.other.namespace
+//                    ^^ keyword.other.use-as
 //                       ^^^^ comment.block
-//                            ^ entity.name.class
+//                            ^^^^^^^ entity.name.class
 //                                    ^^^^^^^^^ comment.line
 , My\Full\NSname;
+//<- meta.use
+//^^^^^^^^^^^^^^ meta.use
 // <- punctuation.separator
-//^ support.other.namespace
+//^^ support.other.namespace
 //  ^ punctuation.separator.namespace
+//   ^^^^ support.other.namespace
+//       ^ punctuation.separator.namespace
 //        ^ - constant.other
+//        ^^^^^^ support.class.php - constant.other - entity.name - support.function.php - support.other.namespace
+//              ^ punctuation.terminator.expression.php - meta.use
 
 use function /**/ some\namespace\fn_a;
 // <- keyword.other.use
 //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.use
-//  ^ storage.type
+//  ^^^^^^^^ storage.type
 //           ^^^^ comment.block
-//                ^ support.other.namespace
+//                ^^^^ support.other.namespace
 //                    ^ punctuation.separator.namespace
-//                               ^ - entity.name.function
+//                      ^^^^^^^^ support.other.namespace
+//                              ^ punctuation.separator.namespace
+//                               ^^^^ support.function.php - entity.name - constant.other - support.class.php - support.other.namespace
+//                                   ^ punctuation.terminator.expression.php - meta.use
 
 use function some\namespace\fn_a /**/ as fn_b;
 // <- keyword.other.use
-//^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.use
-//  ^ storage.type
-//           ^ support.other.namespace
+//^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.use
+//  ^^^^^^^^ storage.type
+//           ^^^^ support.other.namespace
 //               ^ punctuation.separator.namespace
-//                          ^ - entity.name.function
+//                ^^^^^^^^^ support.other.namespace
+//                         ^ punctuation.separator.namespace
+//                          ^^^^ support.function.php - entity.name - constant.other - support.class.php - support.other.namespace
 //                               ^^^^ comment.block
-//                                    ^ keyword.other.use-as
-//                                       ^ entity.name.function
+//                                    ^^ keyword.other.use-as
+//                                       ^^^^ entity.name.function
+//                                           ^ punctuation.terminator.expression.php - meta.use
 
 use const /**/ some\namespace\ConstA;
 // <- keyword.other.use
-//^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.use
-//  ^ storage.type
+//^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.use
+//  ^^^^^ storage.type
 //        ^^^^ comment.block
-//             ^ support.other.namespace
+//             ^^^^ support.other.namespace
 //                 ^ punctuation.separator.namespace
-//                            ^ constant.other
+//                  ^^^^^^^^^ support.other.namespace
+//                            ^^^^^^ constant.other - support.function.php - entity.name - support.class.php - support.other.namespace
+//                                  ^ punctuation.terminator.expression.php - meta.use
 
 // Unfortunately we don't know if these identifiers are namespaces or classes
 // so we can't disambiguate. Generally we are just going to assume an "as" is
 // a class name so that the definition of the class can be found via the index.
 use some\namespace\{ClassA, ClassB, ClassC as C};
 // <- keyword.other.use
+//^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.use
+//  ^^^^ support.other.namespace
+//      ^ punctuation.separator.namespace
+//       ^^^^^^^^^ support.other.namespace
+//                ^ punctuation.separator.namespace
 //                 ^ punctuation.definition.block
-//                  ^ - entity.name.class
-//                                         ^ keyword.other.use-as
+//                  ^^^^^^ support.class.php - constant.other - entity.name - support.function.php - support.other.namespace
+//                        ^ punctuation.separator
+//                          ^^^^^^ support.class.php - constant.other - entity.name - support.function.php - support.other.namespace
+//                                ^ punctuation.separator
+//                                  ^^^^^^ support.class.php - constant.other - entity.name - support.function.php - support.other.namespace
+//                                         ^^ keyword.other.use-as
 //                                            ^ entity.name.class
 //                                             ^ punctuation.definition.block
+//                                              ^ punctuation.terminator.expression.php - meta.use
 
 use function some\namespace\{fn_a, fn_b, fn_c as fn_d};
 // <- keyword.other.use
+//^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.use
+//  ^^^^^^^^ storage.type.php
+//           ^^^^ support.other.namespace
+//               ^ punctuation.separator.namespace
+//                ^^^^^^^^^ support.other.namespace
+//                         ^ punctuation.separator.namespace
 //                          ^ punctuation.definition.block
-//                           ^ - entity.name.function
-//                                            ^ keyword.other.use-as
-//                                               ^ entity.name.function
+//                           ^^^^ support.function.php - constant.other - entity.name - support.class.php - support.other.namespace
+//                               ^ punctuation.separator
+//                                 ^^^^ support.function.php - constant.other - entity.name - support.class.php - support.other.namespace
+//                                     ^ punctuation.separator
+//                                       ^^^^ support.function.php - constant.other - entity.name - support.class.php - support.other.namespace
+//                                            ^^ keyword.other.use-as
+//                                               ^^^^ entity.name.function
 //                                                   ^ punctuation.definition.block
+//                                                    ^ punctuation.terminator.expression.php - meta.use
 
 
 use const some\namespace\{ConstA, ConstB AS ConstD, ConstC};
 // <- keyword.other.use
+//^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.use
+//  ^^^^^ storage.type.php
+//        ^^^^ support.other.namespace
+//            ^ punctuation.separator.namespace
+//             ^^^^^^^^^ support.other.namespace
+//                      ^ punctuation.separator.namespace
 //                       ^ punctuation.definition.block
-//                        ^ constant.other
-//                                ^ constant.other
-//                                       ^ keyword.other.use-as
-//                                          ^ constant.other
+//                        ^^^^^^ constant.other - support.function.php - entity.name - support.class.php - support.other.namespace
+//                              ^ punctuation.separator
+//                                ^^^^^^ constant.other - support.function.php - entity.name - support.class.php - support.other.namespace
+//                                       ^^ keyword.other.use-as
+//                                          ^^^^^^ constant.other - support.function.php - entity.name - support.class.php - support.other.namespace
+//                                                ^ punctuation.separator
+//                                                  ^^^^^^ constant.other - support.function.php - entity.name - support.class.php - support.other.namespace
 //                                                        ^ punctuation.definition.block
+//                                                         ^ punctuation.terminator.expression.php - meta.use
 
 
 function a($a = array(),             $b = "hi") {};
@@ -644,27 +693,217 @@ SQL;
 class OutputsHtml {
     function embedHtml() {
         if (1) {
-//             ^ meta.function meta.block meta.block punctuation.definition.block.begin
+//             ^ meta.function meta.block punctuation.definition.block.begin
         }
-//      ^ meta.function meta.block meta.block punctuation.definition.block.end
+//      ^ meta.function meta.block punctuation.definition.block.end
         else {
-//           ^ meta.function meta.block meta.block punctuation.definition.block.begin
+//           ^ meta.function meta.block punctuation.definition.block.begin
             ?>
 //          ^^ punctuation.section.embedded.end
             <span></span>
-//          ^^^^^^ meta.tag
+//          ^^^^^^ meta.tag - source.php
             <?
 //          ^^ punctuation.section.embedded.begin
         }
-//      ^ meta.function meta.block meta.block punctuation.definition.block.end
+//      ^ meta.function meta.block punctuation.definition.block.end
         ?>
-//      ^^ punctuation.section.embedded.end
-        <div class="acf-gallery-side-info acf-cf<?php if () { echo ' class-name'; } ?>"></div>
-//      ^^^^  meta.tag
-//                                              ^^^^^ punctuation.section.embedded.begin
-//                                                                                  ^^ punctuation.section.embedded.end
-//                                                                                      ^^^^^^ meta.tag
+//      ^^ punctuation.section.embedded.end - source.php
+
+        <div class="acf-gallery-side-info acf-cf<?php if () { echo ' class-name'; } ?>" id="myid"></div>
+//      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.tag
+//      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ - source.php
+//           ^^^^^ meta.attribute-with-value
+//                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.embedded.line.nested.php
+//                                                                                    ^^^^^^^^^^^^^^^^^^ - source.php
+//                                              ^^^^^ punctuation.section.embedded.begin - source.php
+//                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.php
+//                                                                                  ^^ punctuation.section.embedded.end - source.php
+//                                                                                      ^^^^^^^^^ meta.attribute-with-value
+//                 ^ punctuation.definition.string.begin.html
+//                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string.quoted.double.html
+//                                                                                    ^ punctuation.definition.string.end.html
+        <?= var_dump($foo)
+//      ^^^^^^^^^^^^^^^^^^ meta.embedded.line.nested
+//      ^^^ punctuation.section.embedded.begin - source.php
+//         ^^^^^^^^^^^^^^^ source.php
+        ?>
+//      ^^ punctuation.section.embedded.end - source.php
+
         <?php
 //      ^^^^^ punctuation.section.embedded.begin
     }
 }
+
+function embedHtml() {
+    if (1) {
+//         ^ meta.function meta.block punctuation.definition.block.begin
+    }
+//  ^ meta.function meta.block punctuation.definition.block.end
+    else {
+//       ^ meta.function meta.block punctuation.definition.block.begin
+        ?>
+//      ^^ punctuation.section.embedded.end - source.php
+        <span></span>
+//      ^^^^^^ meta.tag - source.php
+        <?
+//      ^^ punctuation.section.embedded.begin - source.php
+    }
+//  ^ meta.function meta.block punctuation.definition.block.end
+
+    $myClass = new class {
+        function foo() {
+            ?>
+            <div></div>
+//          ^^^^^^^^^^^ meta.tag - source.php
+            <?
+        }
+    }
+
+    $myClosure = function() use ($var) {
+        ?>
+        <div></div>
+//      ^^^^^^^^^^^ meta.tag - source.php
+        <?
+    }
+
+    try {
+        if (1) {
+            if (1) {
+                try {
+// ^^^^^^^^^^^^^^^^^^ source.php
+                    ?>
+//                  ^^ punctuation.section.embedded.end - source.php
+
+                    <div class="acf-gallery-side-info acf-cf<?php if () { echo ' class-name'; } ?>" id="myid"></div>
+//                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.tag
+//                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ - source.php
+//                       ^^^^^ meta.attribute-with-value
+//                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.embedded.line.nested.php
+//                                                                                                ^^^^^^^^^^^^^^^^^^ - source.php
+//                                                          ^^^^^ punctuation.section.embedded.begin
+//                                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.php
+//                                                                                              ^^ punctuation.section.embedded.end
+//                                                                                                  ^^^^^^^^^ meta.attribute-with-value
+//                             ^ punctuation.definition.string.begin.html
+//                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string.quoted.double.html
+//                                                                                                ^ punctuation.definition.string.end.html
+                    <?php
+//                  ^^^^^ punctuation.section.embedded.begin
+//                       ^ source.php
+                } finally {
+                    if (1) {
+                        if (1) {
+                            ?>
+//                          ^^ punctuation.section.embedded.end
+                            <div>
+//                          ^^^^^ meta.tag - source.php
+                            </div>
+                            <?
+//                          ^^ punctuation.section.embedded.begin
+                        }
+                    }
+                }
+            }
+        }
+    } catch (Exception $e) {
+//    ^^^^^^^^^^^^^^^^^^^^ meta.catch.php
+//    ^^^^^ keyword.control.exception.catch.php
+
+    }
+}
+
+class C {
+    private $prop;
+
+    public function __construct($val) {
+//                  ^^^^^^^^^^^ entity.name.function.php support.function.magic.php
+        $this->prop = $val;
+    }
+
+    public function __debugInfo() {
+//                  ^^^^^^^^^^^ entity.name.function.php support.function.magic.php
+        return [
+            'propSquared' => $this->prop ** 2,
+        ];
+    }
+
+    public function __toString()
+//                  ^^^^^^^^^^ entity.name.function.php support.function.magic.php
+    {
+        return $this->prop;
+    }
+
+    public function __test()
+//                  ^^^^^^ entity.name.function.php - support.function.magic.php
+    {
+    }
+}
+
+var_dump(new C(42));
+
+?>
+
+<div class="test <?= $foo ?>"></div>
+//   ^^^^^^^^^^^^^^^^^^^^^^^^ meta.attribute-with-value.class.html
+//         ^ punctuation.definition.string.begin.html
+//         ^^^^^^^^^^^^^^^^^^ string.quoted.double.html
+//                          ^ punctuation.definition.string.end.html
+//               ^^^^^^^^^^^ meta.embedded.line
+//               ^^^ punctuation.section.embedded.begin - source.php
+//                  ^^^^^^ source.php
+//                   ^^^^ variable.other
+//                        ^^ punctuation.section.embedded.end - source.php
+//                           ^ punctuation.definition.tag.end.html
+
+<script>
+    var foo = 4;
+//  ^ storage.type
+//      ^^^ variable.other.readwrite
+//          ^ keyword.operator
+//            ^ constant.numeric
+    <?
+    if ($minimal_increase) {
+        ?>
+        foo += 1;
+//      ^^^^^^^^^ source.js.embedded
+//      ^^^ variable.other.readwrite
+//          ^^ keyword.operator
+//             ^ constant.numeric
+        <?
+    } else {
+//  ^^^^^^^^ source.php
+        ?>
+//      ^^ meta.embedded.block.php - source.php
+        foo *= 2;
+//      ^^^^^^^^^ source.js.embedded
+//      ^^^ variable.other.readwrite
+//          ^^ keyword.operator
+//             ^ constant.numeric
+        <?
+//      ^^ meta.embedded.block.php - source.php
+    }
+    ?>
+</script>
+<style>
+h1 {
+    font-family: Arial;
+//  ^^^^^^^^^^^ support.type.property-name
+//               ^^^^^ support.constant
+    <? if ($minimal_increase) { ?>
+//  ^^ meta.embedded.line.php - source.php
+//    ^^^^^^^^^^^^^^^^^^^^^^^^^^ source.php
+//                              ^^ meta.embedded.line.php - source.php
+        size: 2em;
+//      ^^^^ support.type.property-name
+//            ^ constant.numeric
+    <? } else { ?>
+//  ^^ meta.embedded.line.php - source.php
+//    ^^^^^^^^^^ source.php
+//       ^^^^ keyword.control
+//              ^^ meta.embedded.line.php - source.php
+        size: 3em;
+//      ^^^^ support.type.property-name
+//            ^ constant.numeric
+    <? } ?>
+}
+</style>

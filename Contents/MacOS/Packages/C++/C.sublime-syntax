@@ -49,7 +49,7 @@ contexts:
         - match: \*/
           scope: punctuation.definition.comment.c
           pop: true
-    - match: \*/
+    - match: \*/(?!\*)
       scope: invalid.illegal.stray-comment-end.c
     - match: ^// =(\s*.*?)\s*=\s*$\n?
       scope: comment.line.banner.c
@@ -167,10 +167,10 @@ contexts:
       scope: punctuation.accessor.c
     - match: \+\=|-\=|\*\=|/\=|%\=|&\=|\|\=|\^\=|>>\=|<<\=
       scope: keyword.operator.assignment.augmented.c
-    - match: <\=|>\=|\=\=|<|>|\!\=
-      scope: keyword.operator.comparison.c
     - match: \+|\-|/|%|<<|>>|&&|\|\||\||\^|~|!
       scope: keyword.operator.arithmetic.c
+    - match: <\=|>\=|\=\=|<|>|\!\=
+      scope: keyword.operator.comparison.c
     # These two operator can be both arithmetic and pointer/address related
     - match: \*|&
       scope: keyword.operator.c
@@ -372,6 +372,8 @@ contexts:
     - include: types
     - include: modifiers-parens
     - include: modifiers
+    # All uppercase identifier just before a newline is most likely a macro
+    - match: '[[:upper:][:digit:]_]+\s*$'
     # Identifier that is not the function name - likely a macro
     - match: '{{identifier}}(?!\s*(\(|$))(?=\s+)'
     # Real function definition
@@ -393,7 +395,9 @@ contexts:
             - match : \)
               scope: punctuation.definition.group.end.c
               set: function-definition-continue
-            - match: '{{identifier}}(?=\s*(,|\)))'
+            - match: '\bvoid\b'
+              scope: storage.type.c
+            - match: '{{identifier}}(?=\s*(\[|,|\)))'
               scope: variable.parameter.c
             - include: expressions
     - match: (?=\S)

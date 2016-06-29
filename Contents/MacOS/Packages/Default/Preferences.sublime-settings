@@ -1,8 +1,8 @@
-// Place your settings in the file "User/Preferences.sublime-settings", which
-// overrides the settings in here.
+// Place your settings in the file "Packages/User/Preferences.sublime-settings",
+// which overrides the settings in here.
 //
-// Settings may also be placed in file type specific options files, for
-// example, in Packages/Python/Python.sublime-settings for python files.
+// Settings may also be placed in syntax-specific setting files, for
+// example, in Packages/User/Python.sublime-settings for python files.
 {
     // Sets the colors used within the text area
     "color_scheme": "Packages/Color Scheme - Default/Monokai.tmTheme",
@@ -206,6 +206,10 @@
     // Valid values are 'system' (whatever the OS uses), 'windows' (CRLF) and
     // 'unix' (LF only).
     "default_line_ending": "system",
+
+    // When enabled, hovering over a word will show a popup listing all
+    // possible locations for the definition symbol. Requires index_files.
+    "show_definitions": true,
 
     // When enabled, pressing tab will insert the best matching completion.
     // When disabled, tab will only trigger snippets or insert a tab.

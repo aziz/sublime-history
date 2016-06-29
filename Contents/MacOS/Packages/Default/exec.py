@@ -1,10 +1,14 @@
-import sublime, sublime_plugin
-import os, sys
-import threading
-import subprocess
-import functools
-import time
 import collections
+import functools
+import os
+import subprocess
+import sys
+import threading
+import time
+
+import sublime
+import sublime_plugin
+
 
 class ProcessListener(object):
     def on_data(self, proc, data):
@@ -13,14 +17,15 @@ class ProcessListener(object):
     def on_finished(self, proc):
         pass
 
-# Encapsulates subprocess.Popen, forwarding stdout to a supplied
-# ProcessListener (on a separate thread)
+
 class AsyncProcess(object):
-    def __init__(self, cmd, shell_cmd, env, listener,
-            # "path" is an option in build systems
-            path="",
-            # "shell" is an options in build systems
-            shell=False):
+    """
+    Encapsulates subprocess.Popen, forwarding stdout to a supplied
+    ProcessListener (on a separate thread)
+    """
+
+    def __init__(self, cmd, shell_cmd, env, listener, path="", shell=False):
+        """ "path" and "shell" are options in build systems """
 
         if not shell_cmd and not cmd:
             raise ValueError("shell_cmd or cmd is required")
@@ -53,26 +58,46 @@ class AsyncProcess(object):
 
         if shell_cmd and sys.platform == "win32":
             # Use shell=True on Windows, so shell_cmd is passed through with the correct escaping
-            self.proc = subprocess.Popen(shell_cmd, stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE, stdin=subprocess.PIPE,
-                startupinfo=startupinfo, env=proc_env, shell=True)
+            self.proc = subprocess.Popen(
+                shell_cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                stdin=subprocess.PIPE,
+                startupinfo=startupinfo,
+                env=proc_env,
+                shell=True)
         elif shell_cmd and sys.platform == "darwin":
             # Use a login shell on OSX, otherwise the users expected env vars won't be setup
-            self.proc = subprocess.Popen(["/bin/bash", "-l", "-c", shell_cmd], stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE, stdin=subprocess.PIPE,
-                startupinfo=startupinfo, env=proc_env, shell=False)
+            self.proc = subprocess.Popen(
+                ["/bin/bash", "-l", "-c", shell_cmd],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                stdin=subprocess.PIPE,
+                startupinfo=startupinfo,
+                env=proc_env,
+                shell=False)
         elif shell_cmd and sys.platform == "linux":
             # Explicitly use /bin/bash on Linux, to keep Linux and OSX as
             # similar as possible. A login shell is explicitly not used for
             # linux, as it's not required
-            self.proc = subprocess.Popen(["/bin/bash", "-c", shell_cmd], stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE, stdin=subprocess.PIPE,
-                startupinfo=startupinfo, env=proc_env, shell=False)
+            self.proc = subprocess.Popen(
+                ["/bin/bash", "-c", shell_cmd],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                stdin=subprocess.PIPE,
+                startupinfo=startupinfo,
+                env=proc_env,
+                shell=False)
         else:
             # Old style build system, just do what it asks
-            self.proc = subprocess.Popen(cmd, stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE, stdin=subprocess.PIPE,
-                startupinfo=startupinfo, env=proc_env, shell=shell)
+            self.proc = subprocess.Popen(
+                cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                stdin=subprocess.PIPE,
+                startupinfo=startupinfo,
+                env=proc_env,
+                shell=shell)
 
         if path:
             os.environ["PATH"] = old_path
@@ -87,17 +112,19 @@ class AsyncProcess(object):
         if not self.killed:
             self.killed = True
             if sys.platform == "win32":
-                # terminate would not kill process opened by the shell cmd.exe, it will only kill
-                # cmd.exe leaving the child running
+                # terminate would not kill process opened by the shell cmd.exe,
+                # it will only kill cmd.exe leaving the child running
                 startupinfo = subprocess.STARTUPINFO()
                 startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-                subprocess.Popen("taskkill /PID " + str(self.proc.pid), startupinfo=startupinfo)
+                subprocess.Popen(
+                    "taskkill /PID " + str(self.proc.pid),
+                    startupinfo=startupinfo)
             else:
                 self.proc.terminate()
             self.listener = None
 
     def poll(self):
-        return self.proc.poll() == None
+        return self.proc.poll() is None
 
     def exit_code(self):
         return self.proc.poll()
@@ -126,6 +153,7 @@ class AsyncProcess(object):
                 self.proc.stderr.close()
                 break
 
+
 class ExecCommand(sublime_plugin.WindowCommand, ProcessListener):
     BLOCK_SIZE = 2**14
     text_queue = collections.deque()
@@ -134,9 +162,9 @@ class ExecCommand(sublime_plugin.WindowCommand, ProcessListener):
 
     proc = None
 
-    def run(self, cmd = None, shell_cmd = None, file_regex = "", line_regex = "", working_dir = "",
-            encoding = "utf-8", env = {}, quiet = False, kill = False,
-            word_wrap = True, syntax = "Packages/Text/Plain text.tmLanguage",
+    def run(self, cmd=None, shell_cmd=None, file_regex="", line_regex="", working_dir="",
+            encoding="utf-8", env={}, quiet=False, kill=False,
+            word_wrap=True, syntax="Packages/Text/Plain text.tmLanguage",
             # Catches "path" and "shell"
             **kwargs):
 
@@ -160,8 +188,7 @@ class ExecCommand(sublime_plugin.WindowCommand, ProcessListener):
             self.output_view = self.window.create_output_panel("exec")
 
         # Default the to the current files directory if no working directory was given
-        if (working_dir == "" and self.window.active_view()
-                        and self.window.active_view().file_name()):
+        if working_dir == "" and self.window.active_view() and self.window.active_view().file_name():
             working_dir = os.path.dirname(self.window.active_view().file_name())
 
         self.output_view.settings().set("result_file_regex", file_regex)
@@ -230,9 +257,9 @@ class ExecCommand(sublime_plugin.WindowCommand, ProcessListener):
             if not self.quiet:
                 self.append_string(None, "[Finished]")
 
-    def is_enabled(self, kill = False):
+    def is_enabled(self, kill=False):
         if kill:
-            return (self.proc != None) and self.proc.poll()
+            return (self.proc is not None) and self.proc.poll()
         else:
             return True
 
@@ -290,12 +317,10 @@ class ExecCommand(sublime_plugin.WindowCommand, ProcessListener):
         if not self.quiet:
             elapsed = time.time() - proc.start_time
             exit_code = proc.exit_code()
-            if exit_code == 0 or exit_code == None:
-                self.append_string(proc,
-                    ("[Finished in %.1fs]" % (elapsed)))
+            if exit_code == 0 or exit_code is None:
+                self.append_string(proc, "[Finished in %.1fs]" % elapsed)
             else:
-                self.append_string(proc, ("[Finished in %.1fs with exit code %d]\n"
-                    % (elapsed, exit_code)))
+                self.append_string(proc, "[Finished in %.1fs with exit code %d]\n" % (elapsed, exit_code))
                 self.append_string(proc, self.debug_text)
 
         if proc != self.proc:
@@ -305,7 +330,7 @@ class ExecCommand(sublime_plugin.WindowCommand, ProcessListener):
         if len(errs) == 0:
             sublime.status_message("Build finished")
         else:
-            sublime.status_message(("Build finished with %d errors") % len(errs))
+            sublime.status_message("Build finished with %d errors" % len(errs))
 
     def on_data(self, proc, data):
         try:

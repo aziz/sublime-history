@@ -630,6 +630,13 @@ long func
 }
 /* <- meta.function meta.block punctuation.definition.block.end */
 
+MACRO1
+RETURN_TYPE
+/* <- - entity.name.function */
+func_name() {
+/* < entity.name.function */
+}
+
 MACRO1 void * MACRO2 myfuncname () {
 /*     ^ storage.type */
 /*          ^ keyword.operator */
@@ -790,6 +797,12 @@ std::vector<std::uint8_t> func_returning_path_generic(int a);
 /*         ^ punctuation.definition.generic */
 /*                        ^ entity.name.function */
 
+
+long double operator "" _km (long double x);
+/*          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.function */
+/*                          ^^^^^^^^^^^^^^^ meta.function.parameters */
+/*          ^^^^^^^^^^^^^^^ entity.name.function */
+
 /////////////////////////////////////////////
 // Namespace
 /////////////////////////////////////////////
@@ -871,6 +884,10 @@ protected:
 /* <- storage.modifier */
 private:
 /* <- storage.modifier */
+
+    static int a = 1 << 4;
+    /* <- storage.modifier */
+    /*               ^^ keyword.operator.arithmetic */
 
     static int x;
     /* <- storage.modifier */
@@ -1013,6 +1030,11 @@ class FooBar {
 /*  ^^^^^^ entity.name.function */
 /*           ^ keyword.operator.assignment */
 /*            ^^^^^^^ storage.modifier */
+    FooBar(void) =default;
+/*  ^^^^^^ entity.name.function */
+/*         ^^^^ storage.type */
+/*               ^ keyword.operator.assignment */
+/*                ^^^^^^^ storage.modifier */
 
     // If a constructor name is on a line without the opening (, it is not
     // highlighted as a method/constructor. This prevents a bunch of false
@@ -1058,6 +1080,26 @@ class FooBar {
 
 private:
 /*^^^^^ storage.modifier */
+
+    VISIBILITY_MACRO
+/*  ^ - entity.name.function */
+    myns::subns::MyDataType
+/*  ^ - entity.name.function */
+    and_now_method_name();
+/*  ^ entity.name.function */
+
+    VISIBILITY_MACRO
+/*  ^ - entity.name.function */
+    std::shared_future<std::vector<myns::mysubns::MyDataType>>
+/*  ^ - entity.name.function */
+/*     ^^ punctuation.accessor */
+/*                    ^ punctuation.definition.generic.begin */
+/*                        ^^ punctuation.accessor */
+/*                                ^ punctuation.definition.generic.begin */
+/*                                     ^^ punctuation.accessor */
+    and_now_method_name2();
+/*  ^ entity.name.function */
+
     enum
 /*  ^^^^ meta.enum storage.type */
     {
@@ -1070,9 +1112,20 @@ private:
 
     friend int func(int a, int b);
 /*  ^ storage.modifier */
-/*         storage.type */
+/*         ^ storage.type */
 /*             ^ - entity.name.function */
 /*             ^ - meta.function-call */
+
+    friend int func(int a, int b) {
+/*  ^ storage.modifier */
+/*         ^ storage.type */
+/*             ^ - entity.name.function */
+/*             ^ - meta.function-call */
+/*                                ^ meta.class meta.block meta.block punctuation.definition.block.begin */
+        int a = 1;
+    }
+/*  ^ meta.class meta.block meta.block punctuation.definition.block.end */
+/*   ^ - meta.class meta.block meta.block */
 
     friend class ::FooBar;
 /*  ^ storage.modifier */
@@ -1201,19 +1254,22 @@ class __declspec(dllimport) SkBitmap {}
 // Test preprocessor branching and C blocks
 /////////////////////////////////////////////
 
-int foo(int val, float val2, bool val3 = false)
-/*  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.function */
-/*     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.function.parameters meta.group */
+int foo(int val, float val2[], bool val3 = false)
+/*  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.function */
+/*     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.function.parameters meta.group */
 /*     ^ punctuation.definition.group.begin */
-/*                                            ^ punctuation.definition.group.end */
+/*                                              ^ punctuation.definition.group.end */
 /*          ^^^ variable.parameter */
 /*             ^ punctuation.separator */
 /*                     ^^^^ variable.parameter */
-/*                         ^ punctuation.separator */
-/*                           ^^^^ storage.type */
-/*                                ^^^^ variable.parameter */
-/*                                     ^ keyword.operator.assignment */
-/*                                       ^^^^^ constant.language */
+/*                         ^^ meta.brackets */
+/*                         ^ punctuation.definition.brackets.begin */
+/*                          ^ punctuation.definition.brackets.end */
+/*                           ^ punctuation.separator */
+/*                             ^^^^ storage.type */
+/*                                  ^^^^ variable.parameter */
+/*                                       ^ keyword.operator.assignment */
+/*                                         ^^^^^ constant.language */
 {
     myClass *result;
     result->kk = func(val);
@@ -1318,6 +1374,9 @@ int /* comment */ * myfunc
 
 }
 
+Glib::ustring Node::_getDragTip(GdkEventMotion */*event*/);
+/*                                              ^^^^^^^^^ comment */
+
 MACRO1 void * MACRO2 myfuncname () {
 /*     ^ storage.type */
 /*          ^ keyword.operator */
@@ -1402,6 +1461,21 @@ void sayHi()
 /*        ^ punctuation.definition.generic.begin */
 /*            ^ punctuation.definition.generic.end */
 /*             ^^ meta.group */
+
+    foobaz<>();
+/*  ^^^^^^^^^^ meta.function-call */
+/*  ^^^^^^ variable.function */
+/*        ^ punctuation.definition.generic.begin */
+/*         ^ punctuation.definition.generic.end */
+/*          ^^ meta.group */
+
+    foobaz<0>();
+/*  ^^^^^^^^^^^ meta.function-call */
+/*  ^^^^^^ variable.function */
+/*        ^ punctuation.definition.generic.begin */
+/*         ^ constant.numeric */
+/*          ^ punctuation.definition.generic.end */
+/*           ^^ meta.group */
 
     int a[5];
 /*       ^^^ meta.brackets */

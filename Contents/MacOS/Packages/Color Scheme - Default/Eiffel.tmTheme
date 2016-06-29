@@ -23,6 +23,26 @@
 				<string>#00000012</string>
 				<key>selection</key>
 				<string>#C3DCFF</string>
+
+				<key>popupCss</key>
+				<string><![CDATA[
+					html {
+						background-color: #FFFFFF;
+						color: #000000;
+					}
+					a {
+						color: #1C02FF;
+					}
+					.error, .deleted {
+						color: #D80800;
+					}
+					.success, .inserted {
+						color: #26B31A;
+					}
+					.warning, .modified {
+						color: #D8A600;
+					}
+				]]></string>
 			</dict>
 		</dict>
 		<dict>

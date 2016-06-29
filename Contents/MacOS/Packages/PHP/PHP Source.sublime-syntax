@@ -69,27 +69,47 @@ contexts:
         2: punctuation.separator.php
     - match: \{
       scope: punctuation.definition.block.begin.php
-      push:
-        - meta_scope: meta.block.php
-        - match: \}
-          scope: punctuation.definition.block.end.php
-          pop: true
-        - include: html-block
-        - include: statements
+    - match: \}
+      scope: punctuation.definition.block.end.php
     - include: expressions
 
-  html-block:
-    - match: '(?=\?>)'
+  block:
+    - match: '\}'
+      scope: punctuation.definition.block.end.php
+      pop: true
+    - match: '\{'
+      scope: punctuation.definition.block.begin.php
+      push: block
+    - include: embedded-html
+    - include: statements
+
+  embedded-html:
+    - match: '\?>'
+      scope: meta.embedded.block.php punctuation.section.embedded.end.php
       push:
-        - match: '\?>'
-          scope: punctuation.section.embedded.end.php
-          push: scope:text.html.basic
-          with_prototype:
-            - match: '(?=<\?)'
-              pop: true
-        - match: '<\?(php)?'
-          scope: punctuation.section.embedded.begin.php
+        - meta_scope: embedding.php text.html.basic
+        - clear_scopes: true
+        - match: '<\?(?i:php)?'
+          scope: meta.embedded.block.php punctuation.section.embedded.begin.php
           pop: true
+        - match: ''
+          with_prototype:
+            - include: single-line-php-tag
+            - match: '(?=<\?(?i:php)?)'
+              pop: true
+          push:
+            - include: scope:text.html.basic
+
+  single-line-php-tag:
+    - match: '(<\?=|<\?(?i:php)?(?=.*\?>))'
+      scope: punctuation.section.embedded.begin.php
+      push:
+        - meta_scope: meta.embedded.line.nested.php
+        - meta_content_scope: source.php
+        - match: \?>
+          scope: punctuation.section.embedded.end.php
+          pop: true
+        - include: statements
 
   expressions:
     - include: comments
@@ -288,9 +308,10 @@ contexts:
         # We don't mark this as entity.name.class since the name is pulled
         # verbatim and the indexer should find the name in the original source
         # file.
-        - match: '(\\)?{{identifier}}(?!\\)'
+        - match: '(\\)?({{identifier}})(?!\\)'
           captures:
             1: punctuation.separator.namespace.php
+            2: support.class.php
         - match: '(?=\S|$\n)'
           pop: true
 
@@ -326,9 +347,10 @@ contexts:
         # We don't mark this as entity.name.function since the name is pulled
         # verbatim and the indexer should find the name in the original source
         # file.
-        - match: '(\\)?{{identifier}}(?!\\)'
+        - match: '(\\)?({{identifier}})(?!\\)'
           captures:
             1: punctuation.separator.namespace.php
+            2: support.function.php
         - match: '(?=\S|$\n)'
           pop: true
 
@@ -363,7 +385,7 @@ contexts:
     - include: identifier-constant-pop
 
   class:
-    - match: '(?i)(\b(?:babstract|final)\b\s+)?\b(class)\s+({{identifier}})\s*'
+    - match: '(?i)(\b(?:abstract|final)\b\s+)?\b(class)\s+({{identifier}})\s*'
       captures:
         1: storage.modifier.abstract.php
         2: storage.type.class.php
@@ -479,7 +501,7 @@ contexts:
           scope: storage.type.function.php
         - match: '&'
           scope: storage.modifier.reference.php
-        - match: '(__(?:call|construct|destruct|get|set|isset|unset|tostring|clone|set_state|sleep|wakeup|autoload|invoke|callStatic))'
+        - match: '(__(?:callStatic|call|construct|destruct|get|set|isset|unset|toString|clone|set_state|sleep|wakeup|autoload|invoke|debugInfo))'
           scope: entity.name.function.php support.function.magic.php
         - match: '{{identifier}}'
           scope: entity.name.function.php
@@ -595,7 +617,10 @@ contexts:
     - match: \}
       scope: meta.function.php meta.block.php punctuation.definition.block.end.php
       pop: true
-    - include: html-block
+    - include: embedded-html
+    - match: '\{'
+      scope: punctuation.definition.block.begin.php
+      push: block
     - include: statements
 
   class-name:

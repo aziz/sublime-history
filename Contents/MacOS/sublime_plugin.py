@@ -1,14 +1,14 @@
-import sublime
-import threading
 import imp
 import importlib
 import os
 import sys
-import zipfile
-import sublime_api
-import traceback
 import time
-import math
+import traceback
+import zipfile
+
+import sublime
+import sublime_api
+
 
 api_ready = False
 
@@ -18,10 +18,12 @@ text_command_classes = []
 
 all_command_classes = [application_command_classes, window_command_classes, text_command_classes]
 
-all_callbacks = {'on_new': [], 'on_clone': [], 'on_load': [], 'on_pre_close': [], 'on_close': [],
+all_callbacks = {
+    'on_new': [], 'on_clone': [], 'on_load': [], 'on_pre_close': [], 'on_close': [],
     'on_pre_save': [], 'on_post_save': [], 'on_modified': [],
-    'on_selection_modified': [],'on_activated': [], 'on_deactivated': [],
+    'on_selection_modified': [], 'on_activated': [], 'on_deactivated': [],
     'on_query_context': [], 'on_query_completions': [],
+    'on_hover': [],
     'on_text_command': [], 'on_window_command': [],
     'on_post_text_command': [], 'on_post_window_command': [],
 
@@ -36,6 +38,7 @@ all_callbacks = {'on_new': [], 'on_clone': [], 'on_load': [], 'on_pre_close': []
     'on_clone_async': []}
 
 profile = {}
+
 
 def unload_module(module):
     if "plugin_unloaded" in module.__dict__:
@@ -58,6 +61,7 @@ def unload_module(module):
                 except ValueError:
                     pass
 
+
 def unload_plugin(modulename):
     print("unloading plugin", modulename)
 
@@ -66,6 +70,7 @@ def unload_plugin(modulename):
         m = sys.modules[modulename]
         unload_module(m)
         del sys.modules[modulename]
+
 
 def reload_plugin(modulename):
     print("reloading plugin", modulename)
@@ -132,11 +137,13 @@ def reload_plugin(modulename):
                     except:
                         traceback.print_exc()
 
+
 def create_application_commands():
     cmds = []
     for class_ in application_command_classes:
         cmds.append(class_())
     sublime_api.notify_application_commands(cmds)
+
 
 def create_window_commands(window_id):
     window = sublime.Window(window_id)
@@ -145,12 +152,14 @@ def create_window_commands(window_id):
         cmds.append(class_(window))
     return cmds
 
+
 def create_text_commands(view_id):
     view = sublime.View(view_id)
     cmds = []
     for class_ in text_command_classes:
         cmds.append(class_(view))
     return cmds
+
 
 def on_api_ready():
     global api_ready
@@ -173,6 +182,7 @@ def on_api_ready():
             except:
                 traceback.print_exc()
 
+
 def on_new(view_id):
     v = sublime.View(view_id)
     for callback in all_callbacks['on_new']:
@@ -180,6 +190,7 @@ def on_new(view_id):
             callback.on_new(v)
         except:
             traceback.print_exc()
+
 
 def on_new_async(view_id):
     v = sublime.View(view_id)
@@ -189,6 +200,7 @@ def on_new_async(view_id):
         except:
             traceback.print_exc()
 
+
 def on_clone(view_id):
     v = sublime.View(view_id)
     for callback in all_callbacks['on_clone']:
@@ -197,6 +209,7 @@ def on_clone(view_id):
         except:
             traceback.print_exc()
 
+
 def on_clone_async(view_id):
     v = sublime.View(view_id)
     for callback in all_callbacks['on_clone_async']:
@@ -204,6 +217,7 @@ def on_clone_async(view_id):
             callback.on_clone_async(v)
         except:
             traceback.print_exc()
+
 
 class Summary(object):
     def __init__(self):
@@ -223,6 +237,7 @@ class Summary(object):
             return "{0:.3f}s total".format(self.sum)
         else:
             return "0s total"
+
 
 def run_callback(event, callback, expr):
     t0 = time.time()
@@ -245,11 +260,13 @@ def run_callback(event, callback, expr):
 
     p[name].record(elapsed)
 
+
 def on_load(view_id):
     v = sublime.View(view_id)
 
     for callback in all_callbacks['on_load']:
         run_callback('on_load', callback, lambda: callback.on_load(v))
+
 
 def on_load_async(view_id):
     v = sublime.View(view_id)
@@ -259,20 +276,24 @@ def on_load_async(view_id):
         except:
             traceback.print_exc()
 
+
 def on_pre_close(view_id):
     v = sublime.View(view_id)
     for callback in all_callbacks['on_pre_close']:
         run_callback('on_pre_close', callback, lambda: callback.on_pre_close(v))
+
 
 def on_close(view_id):
     v = sublime.View(view_id)
     for callback in all_callbacks['on_close']:
         run_callback('on_close', callback, lambda: callback.on_close(v))
 
+
 def on_pre_save(view_id):
     v = sublime.View(view_id)
     for callback in all_callbacks['on_pre_save']:
         run_callback('on_pre_save', callback, lambda: callback.on_pre_save(v))
+
 
 def on_pre_save_async(view_id):
     v = sublime.View(view_id)
@@ -282,10 +303,12 @@ def on_pre_save_async(view_id):
         except:
             traceback.print_exc()
 
+
 def on_post_save(view_id):
     v = sublime.View(view_id)
     for callback in all_callbacks['on_post_save']:
         run_callback('on_post_save', callback, lambda: callback.on_post_save(v))
+
 
 def on_post_save_async(view_id):
     v = sublime.View(view_id)
@@ -295,10 +318,12 @@ def on_post_save_async(view_id):
         except:
             traceback.print_exc()
 
+
 def on_modified(view_id):
     v = sublime.View(view_id)
     for callback in all_callbacks['on_modified']:
         run_callback('on_modified', callback, lambda: callback.on_modified(v))
+
 
 def on_modified_async(view_id):
     v = sublime.View(view_id)
@@ -308,10 +333,12 @@ def on_modified_async(view_id):
         except:
             traceback.print_exc()
 
+
 def on_selection_modified(view_id):
     v = sublime.View(view_id)
     for callback in all_callbacks['on_selection_modified']:
         run_callback('on_selection_modified', callback, lambda: callback.on_selection_modified(v))
+
 
 def on_selection_modified_async(view_id):
     v = sublime.View(view_id)
@@ -321,10 +348,12 @@ def on_selection_modified_async(view_id):
         except:
             traceback.print_exc()
 
+
 def on_activated(view_id):
     v = sublime.View(view_id)
     for callback in all_callbacks['on_activated']:
         run_callback('on_activated', callback, lambda: callback.on_activated(v))
+
 
 def on_activated_async(view_id):
     v = sublime.View(view_id)
@@ -334,10 +363,12 @@ def on_activated_async(view_id):
         except:
             traceback.print_exc()
 
+
 def on_deactivated(view_id):
     v = sublime.View(view_id)
     for callback in all_callbacks['on_deactivated']:
         run_callback('on_deactivated', callback, lambda: callback.on_deactivated(v))
+
 
 def on_deactivated_async(view_id):
     v = sublime.View(view_id)
@@ -346,6 +377,7 @@ def on_deactivated_async(view_id):
             callback.on_deactivated_async(v)
         except:
             traceback.print_exc()
+
 
 def on_query_context(view_id, key, operator, operand, match_all):
     v = sublime.View(view_id)
@@ -359,6 +391,7 @@ def on_query_context(view_id, key, operator, operand, match_all):
 
     return False
 
+
 def normalise_completion(c):
     if len(c) == 1:
         return (c[0], "", "")
@@ -366,6 +399,7 @@ def normalise_completion(c):
         return (c[0], "", c[1])
     else:
         return c
+
 
 def on_query_completions(view_id, prefix, locations):
     v = sublime.View(view_id)
@@ -384,7 +418,14 @@ def on_query_completions(view_id, prefix, locations):
         except:
             traceback.print_exc()
 
-    return (completions,flags)
+    return (completions, flags)
+
+
+def on_hover(view_id, point, hover_zone):
+    v = sublime.View(view_id)
+    for callback in all_callbacks['on_hover']:
+        run_callback('on_hover', callback, lambda: callback.on_hover(v, point, hover_zone))
+
 
 def on_text_command(view_id, name, args):
     v = sublime.View(view_id)
@@ -400,6 +441,7 @@ def on_text_command(view_id, name, args):
 
     return ("", None)
 
+
 def on_window_command(window_id, name, args):
     window = sublime.Window(window_id)
     for callback in all_callbacks['on_window_command']:
@@ -414,6 +456,7 @@ def on_window_command(window_id, name, args):
 
     return ("", None)
 
+
 def on_post_text_command(view_id, name, args):
     v = sublime.View(view_id)
     for callback in all_callbacks['on_post_text_command']:
@@ -421,6 +464,7 @@ def on_post_text_command(view_id, name, args):
             callback.on_post_text_command(v, name, args)
         except:
             traceback.print_exc()
+
 
 def on_post_window_command(window_id, name, args):
     window = sublime.Window(window_id)
@@ -507,11 +551,11 @@ class Command(object):
     def description_(self, args):
         try:
             args = self.filter_args(args)
-            if args != None:
+            if args is not None:
                 return self.description(**args)
             else:
                 return self.description()
-        except TypeError as e:
+        except TypeError:
             return ""
 
     def description(self):
@@ -588,7 +632,7 @@ class MultizipImporter(object):
         self.loaders = []
         self.file_loaders = []
 
-    def find_module(self, fullname, path = None):
+    def find_module(self, fullname, path=None):
         if not path:
             for l in self.loaders:
                 if l.name == fullname:
@@ -702,8 +746,8 @@ class ZipLoader(object):
         return (None, None, None, False)
 
     def _scan_zip(self):
-        self.contents = {"":""}
-        self.filenames = {"":""}
+        self.contents = {"": ""}
+        self.filenames = {"": ""}
         self.packages = {""}
         self.refreshed = time.time()
 
@@ -725,7 +769,7 @@ class ZipLoader(object):
                 self.contents[pkg_path] = z.read(f).decode('utf-8')
                 self.filenames[pkg_path] = f
             except UnicodeDecodeError:
-                print(f, "in", zippath, "is not utf-8 encoded, unable to load plugin")
+                print(f, "in", self.zippath, "is not utf-8 encoded, unable to load plugin")
                 continue
 
             while len(paths) > 1:
@@ -743,6 +787,7 @@ override_path = None
 multi_importer = MultizipImporter()
 sys.meta_path.insert(0, multi_importer)
 
+
 def update_compressed_packages(pkgs):
     multi_importer.loaders = []
     for p in pkgs:
@@ -750,6 +795,7 @@ def update_compressed_packages(pkgs):
             multi_importer.loaders.append(ZipLoader(p))
         except (FileNotFoundError, zipfile.BadZipFile) as e:
             print("error loading " + p + ": " + str(e))
+
 
 def set_override_path(path):
     global override_path

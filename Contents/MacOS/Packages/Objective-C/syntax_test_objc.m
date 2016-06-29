@@ -186,6 +186,11 @@ struct point2 {
     int y;
 }
 
+int main(void) {
+/*  ^^^^ entity.name.function */
+/*       ^^^^ storage.type */
+}
+
 struct point get_point() {}
 /*           ^^^^^^^^^^^^^^ meta.function */
 /*                    ^^ meta.function.parameters */
@@ -206,14 +211,17 @@ struct foo **alloc_foo();
 // Test preprocessor branching and C blocks
 /////////////////////////////////////////////
 
-int foo(int val, float val2)
-/*  ^^^^^^^^^^^^^^^^^^^^^^^^ meta.function */
-/*     ^^^^^^^^^^^^^^^^^^^^^ meta.function.parameters meta.group */
+int foo(int val, float val2[])
+/*  ^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.function */
+/*     ^^^^^^^^^^^^^^^^^^^^^^^ meta.function.parameters meta.group */
 /*     ^ punctuation.definition.group.begin */
-/*                         ^ punctuation.definition.group.end */
+/*                           ^ punctuation.definition.group.end */
 /*          ^^^ variable.parameter */
 /*             ^ punctuation.separator */
 /*                     ^^^^ variable.parameter */
+/*                         ^^ meta.brackets */
+/*                         ^ punctuation.definition.brackets.begin */
+/*                          ^ punctuation.definition.brackets.end */
 {
 /* <- meta.function meta.block */
     myClass *result;
@@ -278,6 +286,13 @@ int /* comment */ * myfunc
 /*      ^ punctuation.definition.group.end */
 {
 /* <- meta.function meta.block punctuation.definition.block.begin */
+}
+
+MACRO1
+RETURN_TYPE
+/* <- - entity.name.function */
+func_name() {
+/* < entity.name.function */
 }
 
 MACRO1 void * MACRO2 myfuncname () {

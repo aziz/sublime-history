@@ -108,10 +108,15 @@
 /*      ^^ keyword.keyframe-selector.css */
 }
 
-    @font-face {}
+    @font-face {
 /*  ^^^^^^^^^^^ meta.at-rule.font-face.css */
 /*  ^          punctuation.definition.keyword.css    */
 /*   ^^^^^^^^^ keyword.control.at-rule.font-face.css */
+
+    src: local(Font),
+        /* */
+/*      ^^^^^ comment.block.css */
+}
 
 .test-var { --test-var: arial; }
 /*          ^^^^^^^^^^ support.type.custom-property.css       */
@@ -619,6 +624,12 @@
 /*                      ^^^^^       string.quoted.double.css                          */
 /*                           ^      punctuation.separator.css                         */
 /*                             ^^^^ support.constant.property-value.counter-style.css */
+
+    top: symbols(fixed "\2020" url());
+/*       ^^^^^^^                   support.function.counter.css     */
+/*               ^^^^^             support.constant.symbol-type.css */
+/*                     ^^^^^^^     string.quoted.double.css         */
+/*                             ^^^ support.function.url.css         */
 }
 
 .test-grid-functions {

@@ -105,7 +105,7 @@ contexts:
           scope: meta.class.identifier.java
           captures:
             1: storage.modifier.java
-            2: entity.name.type.class.java
+            2: entity.name.class.java
         - match: \bextends\b
           scope: storage.modifier.extends.java
           push:
@@ -142,6 +142,8 @@ contexts:
     - match: "{"
       push:
         - match: "}"
+          pop: true
+        - match: "(?=%>)"
           pop: true
         - include: code
     - include: assertions
@@ -199,6 +201,8 @@ contexts:
                   pop: true
                 - include: class-body
   keywords:
+    - match: \b(goto|const)\b
+      scope: invalid.illegal.java
     - match: \b(try|catch|finally|throw)\b
       scope: keyword.control.catch-exception.java
     - match: '\?|:'
@@ -258,7 +262,7 @@ contexts:
     - match: '\b((?:[a-z]\w*\.)*[A-Z]+\w*)<'
       push:
         - meta_scope: storage.type.generic.java
-        - match: '>|[^\w\s,\?<\[\]]'
+        - match: '>|[^\w\s,\?<\[\].]'
           pop: true
         - include: object-types
         - match: <

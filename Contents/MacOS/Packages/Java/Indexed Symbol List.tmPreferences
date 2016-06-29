@@ -2,15 +2,13 @@
 <plist version="1.0">
 <dict>
 	<key>name</key>
-	<string>Symbol List: Method</string>
+	<string>Symbol List: Classes</string>
 	<key>scope</key>
-	<string>source.ruby meta.function</string>
+	<string>source.java entity.name.class.java, source.java entity.name.function.java</string>
 	<key>settings</key>
 	<dict>
-		<key>showInSymbolList</key>
+		<key>showInIndexedSymbolList</key>
 		<integer>1</integer>
-		<key>symbolTransformation</key>
-		<string>s/^\s*def\s+//</string>
 	</dict>
 </dict>
 </plist>
