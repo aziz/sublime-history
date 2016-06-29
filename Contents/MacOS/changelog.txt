@@ -6,6 +6,13 @@ h2 { color: #333; font-size: 2.0em; margin: 0; }
 .release-date, .forum-link { font-size: 10pt }
 </style>
 
+<h2>Build 3105</h2>
+<div class="release-date">Release Date: 18 February 2016</div>
+<ul>
+    <li>Fixed a performance issue with the JavaScript syntax highlighting changes</li>
+    <li><tt>show_scope_name</tt> command shows the scope in a popup</li>
+</ul>
+
 <h2>Build 3104</h2>
 <div class="release-date">Release Date: 17 February 2016</div>
 <ul>

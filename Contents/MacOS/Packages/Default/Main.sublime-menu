@@ -759,10 +759,20 @@
                 "children": [ { "command": "$macros" } ]
             },
             { "caption": "-" },
-            { "command": "new_plugin", "caption": "New Plugin…" },
-            { "command": "new_snippet", "caption": "New Snippet…" },
-            { "command": "new_syntax", "caption": "New Syntax…" },
-            { "command": "convert_syntax" },
+            {
+                "caption": "Developer",
+                "children":
+                [
+                    { "command": "new_plugin", "caption": "New Plugin…" },
+                    { "command": "new_snippet", "caption": "New Snippet…" },
+                    { "command": "new_syntax", "caption": "New Syntax…" },
+                    { "command": "convert_syntax" },
+                    { "caption": "-" },
+                    { "command": "profile_plugins" },
+                    { "caption": "-" },
+                    { "command": "show_scope_name" },
+                ]
+            },
             { "caption": "-", "id": "end" }
         ]
     },
