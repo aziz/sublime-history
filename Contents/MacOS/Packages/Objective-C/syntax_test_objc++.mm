@@ -132,9 +132,10 @@ char32_t str10[] = U"\U00000063";
 char str11[] = "\q";
 /*              ^^ invalid.illegal.unknown-escape */
 
-scanf("%ms %as", &buf);
+scanf("%ms %as %*[, ]", &buf);
 /*     ^^^ constant.other.placeholder */
 /*         ^^^ constant.other.placeholder */
+/*             ^^^^^^ constant.other.placeholder */
 
 char rawStr1[] = R"("This is a raw string")";
 /*               ^ storage.type.string */
@@ -717,6 +718,11 @@ FooBar::~FooBar
  /* <- meta.function.parameters meta.group punctuation.definition.group.end */
 /*^^^^ meta.function */
 
+ThisIsAReallyReallyLongClassNameThatRequiresWrappingCodeInTheMiddleOfAPath::
+    ThisIsAReallyReallyLongClassNameThatRequiresWrappingCodeInTheMiddleOfAPath()
+/* <- entity.name.function */
+    : var_name(nullptr) {
+}
 
 bool FooBar::operator==() {}
 /*   ^^^^^^^^^^^^^^^^^^^^^^^ meta.function */
@@ -819,6 +825,18 @@ namespace ns :: abc /* Neither this comment... */
     }
 }
 /* <- meta.namespace meta.block punctuation.definition.block.end */
+
+namespace tl {
+/*^^^^^^^^^^^^ meta.namespace */
+/* ^ keyword.control */
+    namespace {
+/*  ^ keyword.control */
+/*  ^^^^^^^^^^^ meta.namespace meta.namespace */
+/*            ^ meta.block meta.block punctuation.definition.block.begin */
+        void nested_func(){}
+/*           ^ entity.name.function */
+    }
+}
 
 /////////////////////////////////////////////
 // Classes, structs, unions and enums

@@ -505,15 +505,13 @@ $var4 = 0b0111;
 
   foo_bar:
 //^^^^^^^ entity.name.label.php - keyword.control.php
-// this test passes
 
 switch (1) {
 //^ keyword.control
-    case 1: // not actually necessary to prove the problem, but probably a good idea to test
+    case 1:
   //^^^^ keyword.control.php - entity.name.label.php
     default:
   //^^^^^^^ keyword.control.php - entity.name.label.php
-  // this currently fails (does not match scope [embedding.php text.html.basic meta.embedded.block.php source.php entity.name.label.php])
 }
 
 $non_sql = "NO SELECT HIGHLIGHTING!";
@@ -641,3 +639,32 @@ SELECT * FROM users WHERE first_name = 'John'
 //                                     ^^^^^^ string.quoted.single
 SQL;
 // <- punctuation.section.embedded.end keyword.operator.heredoc
+
+
+class OutputsHtml {
+    function embedHtml() {
+        if (1) {
+//             ^ meta.function meta.block meta.block punctuation.definition.block.begin
+        }
+//      ^ meta.function meta.block meta.block punctuation.definition.block.end
+        else {
+//           ^ meta.function meta.block meta.block punctuation.definition.block.begin
+            ?>
+//          ^^ punctuation.section.embedded.end
+            <span></span>
+//          ^^^^^^ meta.tag
+            <?
+//          ^^ punctuation.section.embedded.begin
+        }
+//      ^ meta.function meta.block meta.block punctuation.definition.block.end
+        ?>
+//      ^^ punctuation.section.embedded.end
+        <div class="acf-gallery-side-info acf-cf<?php if () { echo ' class-name'; } ?>"></div>
+//      ^^^^  meta.tag
+//                                              ^^^^^ punctuation.section.embedded.begin
+//                                                                                  ^^ punctuation.section.embedded.end
+//                                                                                      ^^^^^^ meta.tag
+        <?php
+//      ^^^^^ punctuation.section.embedded.begin
+    }
+}

@@ -6,6 +6,14 @@ h2 { color: #333; font-size: 2.0em; margin: 0; }
 .release-date, .forum-link { font-size: 10pt }
 </style>
 
+<h2>Build 3113</h2>
+<div class="release-date">Release Date: 11 May 2016</div>
+<ul>
+    <li>Various syntax highlighting improvements</li>
+    <li>Fixed a crash that could occur with an invalid result_file_regex settings</li>
+    <li>API: Updated OpenSSL to 1.0.2h</li>
+</ul>
+
 <h2>Build 3112</h2>
 <div class="release-date">Release Date: 5 May 2016</div>
 <ul>
