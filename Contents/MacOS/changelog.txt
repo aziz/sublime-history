@@ -6,6 +6,15 @@ h2 { color: #333; font-size: 2.0em; margin: 0; }
 .release-date, .forum-link { font-size: 10pt }
 </style>
 
+<h2>Build 3106</h2>
+<div class="release-date">Release Date: 24 February 2016</div>
+<ul>
+    <li>Significant changes to JavaScript syntax highlighting</li>
+    <li>Themes may now be switched on the fly without artifacts</li>
+    <li>Syntax Definitions: Fixed some cases where pop matches with back references weren't working correctly</li>
+    <li>Fixed a rare spell check crash regression in 3104</li>
+</ul>
+
 <h2>Build 3105</h2>
 <div class="release-date">Release Date: 18 February 2016</div>
 <ul>
