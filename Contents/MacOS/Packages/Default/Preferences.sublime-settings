@@ -370,6 +370,9 @@
     // Results can be shown via the Tools/Build Results menu.
     "show_panel_on_build": true,
 
+    // Shows build errors just under the line on which they occur.
+    "show_errors_inline": true,
+
     // Preview file contents when clicking on a file in the side bar. Double
     // clicking or editing the preview will open the file and assign it a tab.
     "preview_on_click": true,

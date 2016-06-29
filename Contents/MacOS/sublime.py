@@ -72,6 +72,10 @@ UI_ELEMENT_STATUS_BAR = 8
 UI_ELEMENT_MENU = 16
 UI_ELEMENT_OPEN_FILES = 32
 
+LAYOUT_INLINE = 0
+LAYOUT_BELOW = 1
+LAYOUT_BLOCK = 2
+
 
 def version():
     return sublime_api.version()
@@ -722,6 +726,9 @@ class View(object):
         """ Returns true if the View is still a valid handle. Will return False for a closed view, for example. """
         return sublime_api.view_buffer_id(self.view_id) != 0
 
+    def is_primary(self):
+        return sublime_api.view_is_primary(self.view_id)
+
     def window(self):
         window_id = sublime_api.view_window(self.view_id)
         if window_id == 0:
@@ -1029,6 +1036,21 @@ class View(object):
     def erase_regions(self, key):
         sublime_api.view_erase_regions(self.view_id, key)
 
+    def add_phantom(self, key, region, content, layout, on_navigate=None):
+        return sublime_api.view_add_phantom(self.view_id, key, region, content, layout, on_navigate)
+
+    def erase_phantoms(self, key):
+        sublime_api.view_erase_phantoms(self.view_id, key)
+
+    def erase_phantom_by_id(self, pid):
+        sublime_api.view_erase_phantom(self.view_id, pid)
+
+    def query_phantom(self, pid):
+        return sublime_api.view_query_phantoms(self.view_id, [pid])
+
+    def query_phantoms(self, pids):
+        return sublime_api.view_query_phantoms(self.view_id, pids)
+
     def assign_syntax(self, syntax_file):
         sublime_api.view_assign_syntax(self.view_id, syntax_file)
 
@@ -1060,6 +1082,9 @@ class View(object):
 
     def find_all_results(self):
         return sublime_api.view_find_all_results(self.view_id)
+
+    def find_all_results_with_text(self):
+        return sublime_api.view_find_all_results_with_text(self.view_id)
 
     def command_history(self, delta, modifying_only=False):
         return sublime_api.view_command_history(self.view_id, delta, modifying_only)
@@ -1121,3 +1146,52 @@ class Settings(object):
 
     def clear_on_change(self, tag):
         sublime_api.settings_clear_on_change(self.settings_id, tag)
+
+
+class Phantom(object):
+    def __init__(self, region, content, layout, on_navigate=None):
+        self.region = region
+        self.content = content
+        self.layout = layout
+        self.on_navigate = on_navigate
+        self.id = None
+
+    def __eq__(self, rhs):
+        # Note that self.id is not considered
+        return (self.region == rhs.region and self.content == rhs.content and
+                self.layout == rhs.layout and self.on_navigate == rhs.on_navigate)
+
+
+class PhantomSet(object):
+    def __init__(self, view, key=""):
+        self.view = view
+        self.key = key
+        self.phantoms = []
+
+    def __del__(self):
+        for p in self.phantoms:
+            self.view.erase_phantom_by_id(p.id)
+
+    def update(self, new_phantoms):
+        # Update the list of phantoms that exist in the text buffer with their
+        # current location
+        regions = self.view.query_phantoms([p.id for p in self.phantoms])
+        for i in range(len(regions)):
+            self.phantoms[i].region = regions[i]
+
+        for p in new_phantoms:
+            try:
+                # Phantom already exists, copy the id from the current one
+                idx = self.phantoms.index(p)
+                p.id = self.phantoms[idx].id
+            except ValueError:
+                p.id = self.view.add_phantom(
+                    self.key, p.region, p.content, p.layout, p.on_navigate)
+
+        for p in self.phantoms:
+            # if the region is -1, then it's already been deleted, no need to
+            # call erase
+            if p not in new_phantoms and p.region != Region(-1):
+                self.view.erase_phantom_by_id(p.id)
+
+        self.phantoms = new_phantoms

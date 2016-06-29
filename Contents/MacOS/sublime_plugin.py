@@ -16,17 +16,33 @@ application_command_classes = []
 window_command_classes = []
 text_command_classes = []
 
-all_command_classes = [application_command_classes, window_command_classes, text_command_classes]
+view_event_listener_classes = []
+view_event_listeners = {}
+
+all_command_classes = [
+    application_command_classes,
+    window_command_classes,
+    text_command_classes]
 
 all_callbacks = {
-    'on_new': [], 'on_clone': [], 'on_load': [], 'on_pre_close': [], 'on_close': [],
-    'on_pre_save': [], 'on_post_save': [], 'on_modified': [],
-    'on_selection_modified': [], 'on_activated': [], 'on_deactivated': [],
-    'on_query_context': [], 'on_query_completions': [],
+    'on_new': [],
+    'on_clone': [],
+    'on_load': [],
+    'on_pre_close': [],
+    'on_close': [],
+    'on_pre_save': [],
+    'on_post_save': [],
+    'on_modified': [],
+    'on_selection_modified': [],
+    'on_activated': [],
+    'on_deactivated': [],
+    'on_query_context': [],
+    'on_query_completions': [],
     'on_hover': [],
-    'on_text_command': [], 'on_window_command': [],
-    'on_post_text_command': [], 'on_post_window_command': [],
-
+    'on_text_command': [],
+    'on_window_command': [],
+    'on_post_text_command': [],
+    'on_post_window_command': [],
     'on_modified_async': [],
     'on_selection_modified_async': [],
     'on_pre_save_async': [],
@@ -49,6 +65,11 @@ def unload_module(module):
 
     # Unload the old plugins
     if "plugins" in module.__dict__:
+        for view_id, listener_instances in view_event_listeners.items():
+            for vel in listener_instances[:]:
+                if vel.__class__ in module.plugins:
+                    listener_instances.remove(vel)
+
         for p in module.plugins:
             for cmd_cls_list in all_command_classes:
                 try:
@@ -60,6 +81,11 @@ def unload_module(module):
                     c.remove(p)
                 except ValueError:
                     pass
+
+            try:
+                view_event_listener_classes.remove(p)
+            except ValueError:
+                pass
 
 
 def unload_plugin(modulename):
@@ -84,6 +110,7 @@ def reload_plugin(modulename):
 
     module_plugins = []
     on_activated_targets = []
+    module_view_event_listener_classes = []
     for type_name in dir(m):
         try:
             t = m.__dict__[type_name]
@@ -113,6 +140,11 @@ def reload_plugin(modulename):
 
                     module_plugins.append(obj)
 
+                if issubclass(t, ViewEventListener):
+                    view_event_listener_classes.append(t)
+                    module_view_event_listener_classes.append(t)
+                    module_plugins.append(t)
+
         except AttributeError:
             pass
 
@@ -136,6 +168,13 @@ def reload_plugin(modulename):
                         el.on_activated(v)
                     except:
                         traceback.print_exc()
+
+        # Create any require ViewEventListener objects
+        if len(module_view_event_listener_classes) > 0:
+            for w in sublime.windows():
+                for v in w.views():
+                    create_view_event_listeners(
+                        module_view_event_listener_classes, v)
 
 
 def create_application_commands():
@@ -182,9 +221,110 @@ def on_api_ready():
             except:
                 traceback.print_exc()
 
+    # Create ViewEventListener instances
+    if len(view_event_listener_classes) > 0:
+        for w in sublime.windows():
+            for v in w.views():
+                attach_view(v)
+
+
+def is_view_event_listener_applicable(cls, view):
+    if not cls.is_applicable(view.settings()):
+        return False
+
+    if cls.applies_to_primary_view_only() and not view.is_primary():
+        return False
+
+    return True
+
+
+def create_view_event_listeners(classes, view):
+    if len(classes) > 0:
+        if view.view_id not in view_event_listeners:
+            view_event_listeners[view.view_id] = []
+
+        for c in classes:
+            if is_view_event_listener_applicable(c, view):
+                view_event_listeners[view.view_id].append(c(view))
+
+
+def check_view_event_listeners(view):
+    if len(view_event_listener_classes) > 0:
+        if view.view_id not in view_event_listeners:
+            view_event_listeners[view.view_id] = []
+
+        listeners = view_event_listeners[view.view_id]
+
+        for cls in view_event_listener_classes:
+            found = False
+            instance = None
+            for l in listeners:
+                if l.__class__ == cls:
+                    found = True
+                    instance = l
+                    break
+
+            want = is_view_event_listener_applicable(cls, view)
+
+            if want and not found:
+                listeners.append(cls(view))
+            elif found and not want:
+                listeners.remove(instance)
+
+
+def attach_view(view):
+    check_view_event_listeners(view)
+
+    view.settings().add_on_change(
+        "check_view_event_listeners",
+        lambda: check_view_event_listeners(view))
+
+
+check_all_view_event_listeners_scheduled = False
+
+
+def check_all_view_event_listeners():
+    global check_all_view_event_listeners_scheduled
+    check_all_view_event_listeners_scheduled = False
+    for w in sublime.windows():
+        for v in w.views():
+            check_view_event_listeners(v)
+
+
+def detach_view(view):
+    if view.view_id in view_event_listeners:
+        del view_event_listeners[view.view_id]
+
+    # A view has closed, which implies 'is_primary' may have changed, so see if
+    # any of the ViewEventListener classes need to be created.
+    # Call this in a timeout, as 'view' will still be reporting itself as a
+    # primary at this stage
+    global check_all_view_event_listeners_scheduled
+    if not check_all_view_event_listeners_scheduled:
+        check_all_view_event_listeners_scheduled = True
+        sublime.set_timeout(check_all_view_event_listeners)
+
+
+def event_listeners_for_view(view):
+    if view.view_id in view_event_listeners:
+        return view_event_listeners[view.view_id]
+    else:
+        return []
+
+
+def find_view_event_listener(view, cls):
+    if view.view_id in view_event_listeners:
+        for vel in view_event_listeners[view.view_id]:
+            if vel.__class__ == cls:
+                return vel
+    return None
+
 
 def on_new(view_id):
     v = sublime.View(view_id)
+
+    attach_view(v)
+
     for callback in all_callbacks['on_new']:
         try:
             callback.on_new(v)
@@ -203,6 +343,9 @@ def on_new_async(view_id):
 
 def on_clone(view_id):
     v = sublime.View(view_id)
+
+    attach_view(v)
+
     for callback in all_callbacks['on_clone']:
         try:
             callback.on_clone(v)
@@ -261,8 +404,25 @@ def run_callback(event, callback, expr):
     p[name].record(elapsed)
 
 
+def run_view_listener_callback(view, name):
+    for vel in event_listeners_for_view(view):
+        if name in vel.__class__.__dict__:
+            run_callback(name, vel, lambda: vel.__class__.__dict__[name](vel))
+
+
+def run_async_view_listener_callback(view, name):
+    for vel in event_listeners_for_view(view):
+        if name in vel.__class__.__dict__:
+            try:
+                vel.__class__.__dict__[name](vel)
+            except:
+                traceback.print_exc()
+
+
 def on_load(view_id):
     v = sublime.View(view_id)
+
+    attach_view(v)
 
     for callback in all_callbacks['on_load']:
         run_callback('on_load', callback, lambda: callback.on_load(v))
@@ -285,6 +445,9 @@ def on_pre_close(view_id):
 
 def on_close(view_id):
     v = sublime.View(view_id)
+
+    detach_view(v)
+
     for callback in all_callbacks['on_close']:
         run_callback('on_close', callback, lambda: callback.on_close(v))
 
@@ -323,6 +486,7 @@ def on_modified(view_id):
     v = sublime.View(view_id)
     for callback in all_callbacks['on_modified']:
         run_callback('on_modified', callback, lambda: callback.on_modified(v))
+    run_view_listener_callback(v, 'on_modified')
 
 
 def on_modified_async(view_id):
@@ -332,12 +496,14 @@ def on_modified_async(view_id):
             callback.on_modified_async(v)
         except:
             traceback.print_exc()
+    run_async_view_listener_callback(v, 'on_modified_async')
 
 
 def on_selection_modified(view_id):
     v = sublime.View(view_id)
     for callback in all_callbacks['on_selection_modified']:
         run_callback('on_selection_modified', callback, lambda: callback.on_selection_modified(v))
+    run_view_listener_callback(v, 'on_selection_modified')
 
 
 def on_selection_modified_async(view_id):
@@ -347,12 +513,14 @@ def on_selection_modified_async(view_id):
             callback.on_selection_modified_async(v)
         except:
             traceback.print_exc()
+    run_async_view_listener_callback(v, 'on_selection_modified_async')
 
 
 def on_activated(view_id):
     v = sublime.View(view_id)
     for callback in all_callbacks['on_activated']:
         run_callback('on_activated', callback, lambda: callback.on_activated(v))
+    run_view_listener_callback(v, 'on_activated')
 
 
 def on_activated_async(view_id):
@@ -362,12 +530,14 @@ def on_activated_async(view_id):
             callback.on_activated_async(v)
         except:
             traceback.print_exc()
+    run_async_view_listener_callback(v, 'on_activated_async')
 
 
 def on_deactivated(view_id):
     v = sublime.View(view_id)
     for callback in all_callbacks['on_deactivated']:
         run_callback('on_deactivated', callback, lambda: callback.on_deactivated(v))
+    run_view_listener_callback(v, 'on_deactivated')
 
 
 def on_deactivated_async(view_id):
@@ -377,6 +547,7 @@ def on_deactivated_async(view_id):
             callback.on_deactivated_async(v)
         except:
             traceback.print_exc()
+    run_async_view_listener_callback(v, 'on_deactivated_async')
 
 
 def on_query_context(view_id, key, operator, operand, match_all):
@@ -388,6 +559,15 @@ def on_query_context(view_id, key, operator, operand, match_all):
                 return True
         except:
             traceback.print_exc()
+
+    for vel in event_listeners_for_view(v):
+        if 'on_query_context' in vel.__class__.__dict__:
+            try:
+                val = vel.on_query_context(key, operator, operand, match_all)
+                if val:
+                    return True
+            except:
+                traceback.print_exc()
 
     return False
 
@@ -625,6 +805,16 @@ class TextCommand(Command):
 
 class EventListener(object):
     pass
+
+
+class ViewEventListener(object):
+    @classmethod
+    def is_applicable(cls, settings):
+        return True
+
+    @classmethod
+    def applies_to_primary_view_only(cls):
+        return True
 
 
 class MultizipImporter(object):

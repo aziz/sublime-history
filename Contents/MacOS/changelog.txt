@@ -6,6 +6,23 @@ h2 { color: #333; font-size: 2.0em; margin: 0; }
 .release-date, .forum-link { font-size: 10pt }
 </style>
 
+<h2>Build 3118</h2>
+<div class="release-date">Release Date: 28 June 2016</div>
+<ul>
+    <li>Build errors are now shown inline at the location where they occurred. This is controlled with the show_errors_inline setting.</li>
+    <li>Show Definitions: Now works for languages embedded in HTML (PHP, ASP, ERB etc)</li>
+    <li>Show Definitions: Fixed filtering for unsaved views and on Windows</li>
+    <li>Color Schemes: popupCss will be generated automatically if not present</li>
+    <li>Build Systems may define a cancel command using the "cancel" key</li>
+    <li>Fixed Replace not working as expected in conjunction with regex look behinds</li>
+    <li>minihtml: Implemented font-family stacks</li>
+    <li>minihtml: Added support for inherit CSS value</li>
+    <li>minihtml: Fixed vertical stretching on images</li>
+    <li>API: Added Phantoms</li>
+    <li>API: Added ViewEventListener</li>
+    <li>API: Added View.is_primary()</li>
+</ul>
+
 <h2>Build 3117</h2>
 <div class="release-date">Release Date: 22 June 2016</div>
 <ul>

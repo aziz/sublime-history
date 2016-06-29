@@ -64,6 +64,10 @@ def format_location(l):
     return display_fname + ":" + str(row)
 
 
+def location_href(l):
+    return "%s:%d:%d" % (l[0], l[2][0], l[2][1])
+
+
 def filter_current_symbol(view, point, symbol, locations):
     """
     Filter the point specified from the list of symbol locations. This
@@ -73,9 +77,18 @@ def filter_current_symbol(view, point, symbol, locations):
     and implementation.
     """
 
+    def match_view(path, view):
+        fname = view.file_name()
+        if fname is None:
+            if path.startswith('<untitled '):
+                path_view = view.window().find_open_file(path)
+                return path_view and path_view.id() == view.id()
+            return False
+        return path == fname
+
     new_locations = []
     for l in locations:
-        if l[0] == view.file_name():
+        if match_view(l[0], view):
             symbol_begin_pt = view.text_point(l[2][0] - 1, l[2][1])
             symbol_end_pt = symbol_begin_pt + len(symbol)
             if point >= symbol_begin_pt and point <= symbol_end_pt:
@@ -163,19 +176,22 @@ class ShowDefinitions(sublime_plugin.EventListener):
         if hover_zone != sublime.HOVER_TEXT:
             return
 
+        def score(scopes):
+            return view.score_selector(point, scopes)
+
         # Limit where we show the hover popup
-        if view.score_selector(point, 'text.html'):
-            class_ = view.score_selector(point, 'meta.attribute-with-value.class')
-            id_ = view.score_selector(point, 'meta.attribute-with-value.id')
-            if not class_ and not id_:
+        if score('text.html') and not score('text.html source'):
+            is_class = score('meta.attribute-with-value.class')
+            is_id = score('meta.attribute-with-value.id')
+            if not is_class and not is_id:
                 return
         else:
-            if not view.score_selector(point, 'source'):
+            if not score('source'):
                 return
-            if view.score_selector(point, 'comment'):
+            if score('comment'):
                 return
             # Only show definitions in a string if there is interpolated source
-            if view.score_selector(point, 'string') and not view.score_selector(point, 'string source'):
+            if score('string') and not score('string source'):
                 return
 
         symbol, locations = symbol_at_point(view, point)
@@ -183,15 +199,15 @@ class ShowDefinitions(sublime_plugin.EventListener):
         if not locations:
             return
 
-        location_map = {format_location(l): l for l in locations}
+        location_map = {location_href(l): l for l in locations}
 
         def on_navigate(href):
             open_location(view.window(), location_map[href])
 
         links = []
         for l in locations:
-            formatted_l = format_location(l)
-            links.append('<a href="%s">%s</a>' % (formatted_l, formatted_l))
+            links.append('<a href="%s">%s</a>' % (
+                location_href(l), format_location(l)))
         links = '<br>'.join(links)
         plural = 's' if len(locations) > 1 else ''
 
