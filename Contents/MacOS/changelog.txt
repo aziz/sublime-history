@@ -6,6 +6,18 @@ h2 { color: #333; font-size: 2.0em; margin: 0; }
 .release-date, .forum-link { font-size: 10pt }
 </style>
 
+<h2>Build 3108</h2>
+<div class="release-date">Release Date: 18 March 2016</div>
+<ul>
+    <li>Added Rust package</li>
+    <li>Improvements to JavaScript syntax highlighting</li>
+    <li>Significant improvements to YAML syntax highlighting</li>
+    <li>Various other syntax highlighting improvements</li>
+    <li>Fixed some cases where <tt>.tmPreferences</tt> overrides weren't being picked up</li>
+    <li>Package Development: Added 'Syntax Tests - Regex Compatibility' build variant for evaluating syntax definition performance</li>
+    <li>API: Updated to Python 3.3.6, and now includes OpenSSL, SQLite and bz2.</li>
+</ul>
+
 <h2>Build 3107</h2>
 <div class="release-date">Release Date: 25 February 2016</div>
 <ul>

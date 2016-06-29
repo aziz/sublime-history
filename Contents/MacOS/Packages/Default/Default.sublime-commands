@@ -127,6 +127,7 @@
     { "caption": "Code Folding: Fold Tag Attributes", "command": "fold_tag_attributes" },
 
     { "caption": "Plugin Development: Profile Events", "command": "profile_plugins" },
+    { "caption": "Plugin Development: Convert Syntax to .sublime-syntax", "command": "convert_syntax" },
 
     { "caption": "About", "command": "show_about_window" },
     { "caption": "Changelog", "command": "show_changelog" },
