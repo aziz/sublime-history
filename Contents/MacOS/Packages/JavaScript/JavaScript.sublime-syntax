@@ -8,9 +8,9 @@ file_extensions:
 first_line_match: ^#!/.*\b(node|js)$\n?
 scope: source.js
 variables:
-  identifier: '[_$a-zA-Z][$\w]*'
+  identifier: '[_$[:alpha:]][_$[:alnum:]]*'
   func_lookahead: '\s*\b(async\s+)?function\b'
-  arrow_func_lookahead: '\s*(\basync\s*)?([_$a-zA-Z][$\w]*|\(.*?\))\s*=>'
+  arrow_func_lookahead: '\s*(\basync\s*)?([_$[:alpha:]][_$[:alnum:]]*|\(.*?\))\s*=>'
 
 contexts:
   main:
@@ -246,9 +246,12 @@ contexts:
 
   expressions:
     - include: comments
+    - include: literal-regexp
+    - include: expressions-no-regexp
+
+  expressions-no-regexp:
     - include: literal-string
     - include: literal-string-template
-    - include: literal-regexp
     - include: constructor
     - include: literal-operators
     - include: class
@@ -361,7 +364,16 @@ contexts:
       scope: constant.character.escape.js
 
   literal-regexp:
-    - match: '/(?=.+/[gimy]*)'
+    # Lookahead and prevent incorrect matches by finding a / following an
+    # identifier or number. Not perfect, but stops most incorrect matches
+    - match: '(?=({{identifier}}|0[xob]\d+|\d+|\d*\.\d*(e[-+]?\d+)?)\s*/[^/*])'
+      push:
+        - include: comments
+        - match: '/'
+          scope: keyword.operator.arithmetic.js
+          pop: true
+        - include: expressions-no-regexp
+    - match: '/(?=(?:[^/\\]|\\.)+/(?![/*])[gimy]*(?!\s*[a-zA-Z0-9_$]))'
       scope: punctuation.definition.string.begin.js
       push:
         - meta_scope: string.regexp.js
@@ -370,11 +382,19 @@ contexts:
             1: punctuation.definition.string.end.js
             2: keyword.other.js
           pop: true
-        - match: (?=.)
+        - match: '(?=.|\n)'
           with_prototype:
-            - match: (?=/)
+            - match: '(?=/)'
               pop: true
           push: scope:source.regexp.js
+
+  # Consume a division operator to prevent incorrect highlighting as a regexp
+  prevent-incorrect-regexp:
+    - include: comments
+    - match: '/'
+      scope: keyword.operator.arithmetic.js
+    - match: '(?=[\S\n])'
+      pop: true
 
   constructor:
     - match: '\b(new)\b\s+(?=({{identifier}}|\())'
@@ -390,8 +410,11 @@ contexts:
         - include: literal-variable
         - match: '\.'
           scope: punctuation.accessor.js
+        - include: square-brackets
         - match: '(?=\()'
           set: constructor-params
+        - match: '(?=\S)'
+          pop: true
     - match: '\('
       scope: meta.brace.round.js
       set:
@@ -421,11 +444,11 @@ contexts:
         (?x)
         !(?!=)| # logical-not     right-to-left   right
         &&    | # logical-and     left-to-right   both
-        \|\|  | # logical-or      left-to-right   both
+        \|\|    # logical-or      left-to-right   both
       scope: keyword.operator.logical.js
     - match: |-
         (?x)
-        =(?!=)| # assignment      right-to-left   both
+        =(?!=)  # assignment      right-to-left   both
       scope: keyword.operator.assignment.js
     - match: |-
         (?x)
@@ -439,7 +462,7 @@ contexts:
         \|=  | # assignment      right-to-left   both
         <<=  | # assignment      right-to-left   both
         >>=  | # assignment      right-to-left   both
-        >>>= | # assignment      right-to-left   both
+        >>>=   # assignment      right-to-left   both
       scope: keyword.operator.assignment.augmented.js
     - match: |-
         (?x)
@@ -488,10 +511,16 @@ contexts:
         - match: '\{'
           scope: meta.brace.curly.js
           set: class-body
-        - match: '\b(extends)\b\s+({{identifier}})'
+        - match: '\b(extends)\b\s+(?={{identifier}})'
           captures:
             1: storage.modifier.extends.js
-            2: entity.other.inherited-class.js
+          push:
+            - match: '{{identifier}}'
+              scope: entity.other.inherited-class.js
+            - match: '\.'
+              scope: punctuation.accessor.js
+            - match: '(?=\S)'
+              pop: true
         - match: '{{identifier}}'
           scope: entity.name.type.class.js
         - include: comments
@@ -693,6 +722,9 @@ contexts:
           captures:
             1: variable.other.readwrite.js
             2: meta.delimiter.comma.js
+        - match: '({{identifier}})[ \t]*\n'
+          captures:
+            1: variable.other.readwrite.js
         - match: '((\$)[$\w]*)\s*(:)\s*(?=({{func_lookahead}}|{{arrow_func_lookahead}}))'
           scope: meta.function.declaration.js
           captures:
@@ -811,7 +843,7 @@ contexts:
         - meta_scope: meta.group.braces.square.js
         - match: '\]'
           scope: meta.brace.square.js
-          pop: true
+          set: prevent-incorrect-regexp
         - include: expressions
 
   literal-number:
@@ -903,7 +935,7 @@ contexts:
   function-call-params:
     - match: '\)'
       scope: meta.brace.round.js
-      pop: true
+      set: prevent-incorrect-regexp
     - match: '\('
       scope: meta.brace.round.js
       push:
@@ -914,14 +946,6 @@ contexts:
   literal-variable:
     - include: well-known-identifiers
     - include: support
-    - match: \b(arguments)\b
-      scope: variable.language.arguments.js
-    - match: \b(super)\b
-      scope: variable.language.super.js
-    - match: \b(this)\b
-      scope: variable.language.this.js
-    - match: \b(self)\b
-      scope: variable.language.self.js
     - match: '[A-Z][_$\dA-Z]*\b'
       scope: variable.other.constant.js
     - match: '(\$)\s*(=)\s*(?=({{func_lookahead}}|{{arrow_func_lookahead}}))'
@@ -961,6 +985,14 @@ contexts:
       scope: support.type.object.dom.js
     - match: \b(Buffer|EventEmitter|Server|Pipe|Socket|REPLServer|ReadStream|WriteStream|Stream|Inflate|Deflate|InflateRaw|DeflateRaw|GZip|GUnzip|Unzip|Zip)\b
       scope: support.class.node.js
+    - match: \b(arguments)\b
+      scope: variable.language.arguments.js
+    - match: \b(super)\b
+      scope: variable.language.super.js
+    - match: \b(this)\b
+      scope: variable.language.this.js
+    - match: \b(self)\b
+      scope: variable.language.self.js
 
   support:
     - match: \bdebugger\b
@@ -999,7 +1031,7 @@ contexts:
       scope: meta.property.object.js
     - match: \b(s(hape|ystemId|c(heme|ope|rolling)|ta(ndby|rt)|ize|ummary|pecified|e(ctionRowIndex|lected(Index)?)|rc)|h(space|t(tpEquiv|mlFor)|e(ight|aders)|ref(lang)?)|n(o(Resize|tation(s|Name)|Shade|Href|de(Name|Type|Value)|Wrap)|extSibling|ame)|c(h(ildNodes|Off|ecked|arset)?|ite|o(ntent|o(kie|rds)|de(Base|Type)?|l(s|Span|or)|mpact)|ell(s|Spacing|Padding)|l(ear|assName)|aption)|t(ype|Bodies|itle|Head|ext|a(rget|gName)|Foot)|i(sMap|ndex|d|m(plementation|ages))|o(ptions|wnerDocument|bject)|d(i(sabled|r)|o(c(type|umentElement)|main)|e(clare|f(er|ault(Selected|Checked|Value)))|at(eTime|a))|useMap|p(ublicId|arentNode|r(o(file|mpt)|eviousSibling))|e(n(ctype|tities)|vent|lements)|v(space|ersion|alue(Type)?|Link|Align)|URL|f(irstChild|orm(s)?|ace|rame(Border)?)|width|l(ink(s)?|o(ngDesc|wSrc)|a(stChild|ng|bel))|a(nchors|c(ce(ssKey|pt(Charset)?)|tion)|ttributes|pplets|l(t|ign)|r(chive|eas)|xis|Link|bbr)|r(ow(s|Span|Index)|ules|e(v|ferrer|l|adOnly))|m(ultiple|e(thod|dia)|a(rgin(Height|Width)|xLength))|b(o(dy|rder)|ackground|gColor))\b
       scope: support.constant.dom.js
-    - match: '(?=.)'
+    - match: '(?=.|\n)'
       pop: true
 
   literal-punctuation:
@@ -1026,11 +1058,9 @@ contexts:
         - match: '(?={{identifier}}\s*\()'
           set:
             - include: method-call
-            - match: (?=.)
+            - match: '(?=.|\n)'
               pop: true
         - include: object-property
-        - match: '(?=.)'
-          pop: true
     - match: \;
       scope: punctuation.terminator.statement.js
     - match: ","

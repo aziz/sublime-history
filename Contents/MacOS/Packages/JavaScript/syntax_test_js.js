@@ -33,6 +33,13 @@ import 'module'
 //                 ^^^ entity.name.function
 //                        ^^^ meta.object-literal.key
 
+someFunction({
+    prop1, prop2, prop3
+//  ^ variable.other.readwrite
+//         ^ variable.other.readwrite
+//                ^ variable.other.readwrite
+});
+
 function foo() {
 // <- meta.function.declaration
  // <- meta.function.declaration
@@ -197,7 +204,6 @@ $foo = null;
 // <- variable.other.dollar punctuation.dollar
 // ^ variable.other.dollar - punctuation.dollar
 
-
 baz = "";
 // <- variable.other.readwrite
 //     ^ string.quoted.double
@@ -210,7 +216,7 @@ var qux = 100;
 if (100.0 > qux) {
 // ^^^^^^^^^^^^^^^ meta.conditional
     a;
-//  ^ meta.conditional meta.block 
+//  ^ meta.conditional meta.block
 }
 // <- meta.conditional meta.block
 
@@ -340,6 +346,12 @@ class MyClass extends TheirClass {
 }
 // <- meta.block
 
+class Foo extends React.Component {
+//                      ^ entity.other.inherited-class
+    constructor()
+    {}
+}
+
 () => {}
 // <- meta.function.declaration punctuation.definition.parameters
  // <- meta.function.declaration punctuation.definition.parameters
@@ -406,6 +418,11 @@ sources.DOM
     .status()
     // ^ meta.function-call.method variable.function
 
+this.func()
+// <- variable.language.this
+self.func()
+// <- variable.language.self
+
 var Constructor = function() {
     this._var = 1;
     // ^ variable.language.this
@@ -432,3 +449,66 @@ new Date().getTime()
 // ^^^^^^^ meta.instance.constructor
 //  ^^^^^^ meta.function-call.constructor
 //        ^^^^^^^^^^ - meta.instance.constructor
+
+{
+    'test1': [],
+    'test2': new SomeOjbectHash["default"],
+//               ^^^^^^^^^^^^^^^^^^^^^^^^^ meta.function-call.constructor
+//                             ^ meta.group.braces.square
+    'test3': "asdf"
+}
+
+a = b.c
+d = e.f
+// <- variable.other.readwrite
+
+width/2 + lineStart * Math.sin(i * 30 * π/180)
+//   ^ keyword.operator.arithmetic
+//                  ^ keyword.operator.arithmetic
+//                         ^^^^^^^^^^^^^^^^^^^ meta.function-call.method
+
+var reg = /a+/gimy.exec('aabb')
+//        ^^^^^^^^ string.regexp
+//                ^ punctuation.accessor
+
+'aabbcc'.replace(/b+/, 'd')
+//               ^^^^ string.regexp
+//                 ^ keyword.operator.quantifier.regexp
+
+/a+/
+// <- string.regexp
+
+'foo'.bar() / baz
+//            ^ variable.other.readwrite
+
+var g = 50
+
+g / 20 + 30 /g
+//^ keyword.operator.arithmetic
+//          ^ keyword.operator.arithmetic
+
+var h = foo() / 20 + 30 /g
+//            ^ keyword.operator.arithmetic
+//                      ^ keyword.operator.arithmetic
+
+foo['bar']/ 20 + 30 /g
+//        ^ keyword.operator.arithmetic
+//                  ^ keyword.operator.arithmetic
+
+var result = 200 / 400 + 500 /
+//               ^ keyword.operator.arithmetic
+//                           ^ keyword.operator.arithmetic
+100;
+
+var π = 3.141592653
+//  ^ variable.other.readwrite
+
+var angle = 2*π / count // angle between circles
+//              ^ keyword.operator.arithmetic
+
+var angle = 2*π / count /* angle between circles */
+//              ^ keyword.operator.arithmetic
+
+a = /foo\/bar/g // Ensure handling of escape / in regex detection
+//    ^ string.regexp
+//       ^ constant.character.escape
