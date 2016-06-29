@@ -6,6 +6,15 @@ h2 { color: #333; font-size: 2.0em; margin: 0; }
 .release-date, .forum-link { font-size: 10pt }
 </style>
 
+<h2>Build 3102</h2>
+<div class="release-date">Release Date: 8 February 2016</div>
+<ul>
+    <li>Fixed a 3096 regression in regular expressions when using the <tt>[[:space:]]</tt> character class</li>
+    <li>Fixed a 3096 regression Find in Files output with non-ascii text</li>
+    <li>Added fallback for themes without the Panel Switcher button</li>
+    <li>File change detection better handles failures in the underlying API</li>
+</ul>
+
 <h2>Build 3101</h2>
 <div class="release-date">Release Date: 5 February 2016</div>
 <ul>
