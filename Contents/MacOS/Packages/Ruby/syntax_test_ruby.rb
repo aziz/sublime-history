@@ -6,6 +6,18 @@ puts <<~EOF
 EOF
 # ^ string.unquoted.heredoc
 
+lower_snake_case = 1
+# ^^^^^^^^^^^^^^ -meta.constant.ruby -entity.name.type.constant.ruby
+lowerCamelCase = 2
+# ^^^^^^^^^^^^ -meta.constant.ruby -entity.name.type.constant.ruby
+UpperCamelCase = 3
+# ^^^^^^^^^^^^ meta.constant.ruby entity.name.type.constant.ruby
+UPPER_SNAKE_CASE = 4
+# ^^^^^^^^^^^^^^ meta.constant.ruby entity.name.type.constant.ruby
+
+Symbol === :foo
+# ^^^^ variable.other.constant.ruby -meta.constant.ruby
+
 class MyClass
 # ^ meta.class.ruby keyword.control.class.ruby
 #     ^ meta.class.ruby entity.name.type.class.ruby

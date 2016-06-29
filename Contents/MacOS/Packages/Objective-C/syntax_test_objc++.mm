@@ -10,12 +10,29 @@ struct foo* alloc_foo();
 #endif
  /* <- keyword.control.import */
 
+// The following example ensures that comments at the end of preprocessor
+// directives don't mess with context transitions
+int func() {
+/*  ^ entity.name.function */
+    #if( EXTAL == 40000 )       /* 40 MHz */
+/*  ^ keyword.control.import */
+        #define PLL_RFD_PHI1    10      // PLL0_PH1 = 40MHz
+/*      ^ keyword.control.import */
+/*                              ^^ constant.numeric */
+/*                                      ^ comment.line */
+    #endif
+/*  ^ keyword.control.import */
+}
+/* <- meta.function meta.block punctuation.definition.block.end */
+ /* <- - meta.function meta.block */
 
 #define MACRO_WITH_CURLY_BRACE {
+/*^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.preprocessor.macro */
 /* <- keyword.control.import.define */
 /*      ^ entity.name.constant */
 
 #define MACRO_WITH_CURLY_BRACE_2 }
+/*^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.preprocessor.macro */
 /* <- keyword.control.import.define */
 /*      ^ entity.name.constant */
 
@@ -24,6 +41,28 @@ struct foo* alloc_foo();
 "baz", \
 1)
 /* <- meta.preprocessor */
+
+#define MY_MACRO(a, b)
+/*^^^^^^^^^^^^^^^^^^^^ meta.preprocessor.macro */
+/*              ^^^^^^ meta.preprocessor.macro.parameters */
+/*      ^^^^^^^^ entity.name.function.preprocessor */
+/*                   ^ punctuation.definition.group.end */
+
+#define max(a, b, \
+/*^^^^^^^^^^^^^^^^^ meta.preprocessor.macro */ \
+/*         ^^^^^^^^ meta.preprocessor.macro.parameters */ \
+/* <- keyword.control.import.define */ \
+/*      ^ entity.name.function.preprocessor */ \
+/*         ^ punctuation.definition.group.begin */ \
+/*          ^ variable.parameter */ \
+/*           ^ punctuation.separator */ \
+/* */ \
+/* <- comment.block */ \
+ c)  ((a>b) ? (a>c?a:c) : (b>c?b:c))
+ /* <- meta.preprocessor.macro meta.group variable.parameter */
+  /* <- meta.preprocessor.macro meta.group punctuation.definition.group.end */
+ /*               ^ keyword.operator.ternary */
+ /*                 ^ keyword.operator.ternary */
 
 #if 0
 #ifdef moo
@@ -93,6 +132,10 @@ char32_t str10[] = U"\U00000063";
 char str11[] = "\q";
 /*              ^^ invalid.illegal.unknown-escape */
 
+scanf("%ms %as", &buf);
+/*     ^^^ constant.other.placeholder */
+/*         ^^^ constant.other.placeholder */
+
 char rawStr1[] = R"("This is a raw string")";
 /*               ^ storage.type.string */
 /*                ^ punctuation.definition.string.begin */
@@ -146,8 +189,8 @@ auto a = 2;
 
 decltype(s) dt;
 /* <- storage.type */
-/*      ^ punctuation.definition.parameters */
-/*        ^ punctuation.definition.parameters */
+/*      ^ punctuation.definition.group.begin */
+/*        ^ punctuation.definition.group.end */
 
 float f;
 /* <- storage.type */
@@ -186,13 +229,15 @@ template<class typeId, int N> class tupleTmpl;
 /*                      ^ storage.type */
 /*                          ^ punctuation.definition.generic.end */
 
-template<typename First, typename... Rest> class tupleVariadic;
+template<typename First = U<V>, typename... Rest> class tupleVariadic;
 /* <- storage.type.template */
 /*      ^ punctuation.definition.generic.begin */
 /*       ^ storage.type */
-/*                     ^ punctuation.separator */
-/*                               ^^^ punctuation.definition.variadic */
-/*                                       ^ punctuation.definition.generic.end */
+/*                         ^ punctuation.definition.generic.begin */
+/*                           ^ punctuation.definition.generic.end */
+/*                            ^ punctuation.separator */
+/*                                      ^^^ punctuation.definition.variadic */
+/*                                              ^ punctuation.definition.generic.end */
 
 template<typename Foo> inline struct Foo* baz()
 /*                     ^^^^^^ storage.modifier */
@@ -200,11 +245,29 @@ template<typename Foo> inline struct Foo* baz()
 /*                                        ^^^ meta.function entity.name.function */
 {}
 
-typedef std::vector<std::vector<int> > Table;
-/*                 ^ punctuation.definition.generic.begin */
-/*                             ^ punctuation.definition.generic.begin */
-/*                                 ^ punctuation.definition.generic.end */
+template<typename A, typename B>
+void classname<A, B>::methodName() {
+/*   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.function */
+/*            ^ punctuation.definition.generic.begin */
+/*                 ^ punctuation.definition.generic.end */
+/*                  ^^ punctuation.accessor */
+/*                    ^^^^^^^^^^ entity.name.function */
+}
+
+template<typename C>
+void funcName<C>() {
+/*   ^^^^^^^^^^^^^^^ meta.function */
+/*   ^^^^^^^^ entity.name.function */
+/*           ^ punctuation.definition.generic.begin */
+/*             ^ punctuation.definition.generic.end */
+}
+
+typedef std :: vector<std::vector<int> > Table;
+/*          ^^ punctuation.accessor */
+/*                   ^ punctuation.definition.generic.begin */
+/*                               ^ punctuation.definition.generic.begin */
 /*                                   ^ punctuation.definition.generic.end */
+/*                                     ^ punctuation.definition.generic.end */
 
 /////////////////////////////////////////////
 // Storage Modifiers
@@ -212,8 +275,8 @@ typedef std::vector<std::vector<int> > Table;
 
 alignas(16) char array[256];
 /* <- storage.modifier */
-/*     ^ punctuation.definition.parameters */
-/*        ^ punctuation.definition.parameters */
+/*     ^ punctuation.definition.group.begin */
+/*        ^ punctuation.definition.group.end */
 
 const int XYZ = 2;
 /* <- storage.modifier */
@@ -233,6 +296,7 @@ static_assert(x >= 0);
 /* <- keyword.operator */
 
 noexcept(f());
+/*       ^^^ meta.function-call */
 /* <- keyword.operator */
 
 if (x < 5)
@@ -279,8 +343,10 @@ goto label;
 try
 /* <- keyword.control */
 {
-    throw std::string("xyz");
+    throw std :: string("xyz");
     /* <- keyword.control */
+    /*    ^^^^^^^^^^^^^ variable.function */
+    /*        ^^ punctuation.accessor */
 }
 catch (...)
 /* <- keyword.control */
@@ -303,13 +369,13 @@ return 123;
 
 int x = alignof(char);
 /*      ^ keyword.operator.word */
-/*             ^ punctuation.definition.parameters */
-/*                  ^ punctuation.definition.parameters */
+/*             ^ punctuation.definition.group.begin */
+/*                  ^ punctuation.definition.group.end */
 
 int x = sizeof(char);
 /*      ^ keyword.operator.word */
-/*            ^ punctuation.definition.parameters */
-/*                 ^ punctuation.definition.parameters */
+/*            ^ punctuation.definition.group.begin */
+/*                 ^ punctuation.definition.group.end */
 
 
 /////////////////////////////////////////////
@@ -357,8 +423,9 @@ std::cout << __FILE__ << '\n';
 /*           ^ support.constant */
 /* ^^ punctuation.accessor */
 
-std::cout << __FUNCTION__ << '\n';
-/*           ^ support.constant */
+std :: cout << __FUNCTION__ << '\n';
+/*  ^^ punctuation.accessor */
+/*             ^ support.constant */
 
 std::cout << __LINE__ << '\n';
 /*           ^ support.constant */
@@ -505,19 +572,47 @@ double sci_hex = 0xc1.01AbFp-1;
 
 // function prototype
 void abcdWXYZ1234();
+/*   ^^^^^^^^^^^^^^ meta.function */
 /*   ^ entity.name.function */
+/*               ^^ meta.function.parameters meta.group */
+/*               ^ punctuation.definition.group.begin */
+/*                ^ punctuation.definition.group.end */
 
 // function definition
 void abcdWXYZ1234()
+/*   ^^^^^^^^^^^^^^ meta.function */
 /*   ^ entity.name.function */
+/*               ^^ meta.function.parameters meta.group */
+/*               ^ punctuation.definition.group.begin */
+/*                ^ punctuation.definition.group.end */
 {
+/* <- meta.function meta.block punctuation.definition.block.begin */
 }
+/* <- meta.function meta.block punctuation.definition.block.end */
+
+struct foo **alloc_foo();
+/*           ^^^^^^^^^^^ meta.function */
+/*                    ^^ meta.function.parameters meta.group */
+/*                    ^ punctuation.definition.group.begin */
+/*                     ^ punctuation.definition.group.end */
+/* ^ storage.type */
+/*     ^ - entity.name.struct */
+/*         ^^ keyword.operator */
+/*           ^ entity.name.function */
 
 long func
-/*   ^ entity.name.function */
+/*   ^^^^ meta.function entity.name.function */
 (int x, void *MYMACRO(y) ) {
+/*^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.function */
+/*^^^^^^^^^^^^^^^^^^^^^^^^ meta.function.parameters meta.group */
+/* <- meta.function.parameters meta.group punctuation.definition.group.begin */
+/*   ^ variable.parameter */
 /*            ^ -entity.name.function */
-/*                       ^ -meta.parens */
+/*            ^^^^^^^^^^ meta.function-call */
+/*                   ^^^ meta.group meta.function-call meta.group */
+/*                   ^ punctuation.definition.group.begin */
+/*                     ^ punctuation.definition.group.end */
+/*                       ^ punctuation.definition.group.end */
     // Ensure < and > aren't parsed as a generic
     if (foo < bar && baz > bar ) {
 /*          ^ keyword.operator.comparison */
@@ -532,11 +627,43 @@ long func
 
     }
 }
+/* <- meta.function meta.block punctuation.definition.block.end */
 
 MACRO1 void * MACRO2 myfuncname () {
 /*     ^ storage.type */
 /*          ^ keyword.operator */
 /*                   ^ entity.name.function */
+
+    struct Args {
+/*  ^ storage.type */
+/*         ^ entity.name.struct */
+        void* hello;
+        void* foobar;
+        Args()
+/*      ^ entity.name.function.constructor */
+        : hellp(nullptr),
+/*      ^ punctuation.separator.initializer-list */
+          foobar(nullptr)
+        {
+        }
+    };
+
+    struct Args args2;
+/*  ^ storage.type */
+/*         ^ - entity */
+
+    class LocalFoo MYMACRO
+/*  ^ storage.type */
+/*        ^ entity.name.class */
+/*                 ^ - entity */
+    {
+        LocalFoo() {}
+/*      ^ entity.name.function.constructor */
+    }
+
+    class LocalFoo test;
+/*  ^ storage.type */
+/*        ^ - entity */
 
 }
 
@@ -548,47 +675,107 @@ static const uint32_t * const MACRO funcname();
 /*                      ^ storage.modifier */
 /*                                  ^ entity.name.function */
 
-void FooBar::baz(int a)
-/*   ^^^^^^^^^^^ entity.name.function */
+void FooBar :: baz(int a)
+/*   ^^^^^^^^^^^^^^^^^^^^ meta.function */
+/*   ^^^^^^^^^^^^^ entity.name.function */
+/*          ^^ punctuation.accessor */
+/*                ^^^^^^^ meta.function.parameters meta.group */
+/*                ^ punctuation.definition.group.begin */
+/*                     ^ variable.parameter */
+/*                      ^ punctuation.definition.group.end */
 {
 
 }
 
 FooBar::FooBar(int a)
+/*^^^^^^^^^^^^^^^^^^^ meta.function */
 /*^^^^^^^^^^^^ entity.name.function */
-/*            ^ punctuation.definition.parameters */
+/*            ^^^^^^^ meta.function.parameters meta.group */
+/*            ^ punctuation.definition.group.begin */
 /*             ^^^ storage.type */
-/*                  ^ punctuation.definition.parameters */
+/*                  ^ punctuation.definition.group.end */
 {
 }
 
+FooBar :: FooBar(int a) & =
+/*^^^^^^^^^^^^^^^^^^^^^^^^^ meta.function */
+/*^^^^^^^^^^^^^^ entity.name.function */
+/*              ^^^^^^^ meta.function.parameters meta.group */
+/*              ^ punctuation.definition.group.begin */
+/*               ^^^ storage.type */
+/*                   ^ variable.parameter */
+/*                    ^ punctuation.definition.group.end */
+/*                      ^ keyword.operator */
+/*                        ^ keyword.operator.assignment */
+default;
+/*^^^^^ meta.function storage.modifier */
+
 FooBar::~FooBar
-/*^^^^^^^^^^^^^ entity.name.function */
+/*^^^^^^^^^^^^^ meta.function entity.name.function */
 () { }
+/* <- meta.function.parameters meta.group punctuation.definition.group.begin */
+ /* <- meta.function.parameters meta.group punctuation.definition.group.end */
+/*^^^^ meta.function */
+
 
 bool FooBar::operator==() {}
+/*   ^^^^^^^^^^^^^^^^^^^^^^^ meta.function */
 /*   ^^^^^^^^^^^^^^^^^^ entity.name.function */
+/*                     ^^ meta.function.parameters meta.group */
+/*                     ^ punctuation.definition.group.begin */
+/*                      ^ punctuation.definition.group.end */
+/*                        ^^ meta.block */
+/*                        ^ punctuation.definition.block.begin */
+/*                         ^ punctuation.definition.block.end */
+
 
 myns::FooBar::~FooBar() { }
+/*^^^^^^^^^^^^^^^^^^^^^^^^^ meta.function */
+/*                   ^^ meta.function.parameters meta.group */
+/*                   ^ punctuation.definition.group.begin */
+/*                    ^ punctuation.definition.group.end */
+/*                      ^^^ meta.block */
+/*                      ^ punctuation.definition.block.begin */
+/*                        ^ punctuation.definition.block.end */
 /*^^^^^^^^^^^^^^^^^^^ entity.name.function */
 
     extern "C" void test_in_extern_c_block()
+/*                  ^^^^^^^^^^^^^^^^^^^^^^^^ meta.function */
+/*                                        ^^ meta.function.parameters meta.group */
+/*                                        ^ punctuation.definition.group.begin */
+/*                                         ^ punctuation.definition.group.end */
 /*                  ^ entity.name.function */
 {
+/* <- meta.function meta.block punctuation.definition.block.begin */
 }
+/* <- meta.function meta.block punctuation.definition.block.end */
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+#if 0
 void test_in_extern_c_block()
-/*   ^ entity.name.function */
+/*   ^ comment.block */
 {
 }
+#else
+void test_in_extern_c_block()
+/*   ^^^^^^^^^^^^^^^^^^^^^^^^ meta.function */
+/*                         ^^ meta.function.parameters meta.group */
+/*                         ^ punctuation.definition.group.begin */
+/*                          ^ punctuation.definition.group.end */
+/*   ^ entity.name.function */
+{
+/* <- meta.function meta.block punctuation.definition.block.begin */
+}
+/* <- meta.function meta.block punctuation.definition.block.end */
+#endif
 
 #ifdef __cplusplus
 }
 #endif
+/* ^ - meta.extern-c */
 
 gener<int> func_returning_generic(int a);
 /*         ^ entity.name.function */
@@ -603,6 +790,7 @@ std::vector<std::uint8_t> func_returning_path_generic(int a);
 
 namespace myNameSpace {}
 /* <- keyword.control */
+/*        ^ entity.name.namespace */
 
 namespace new_name = current_name;
 /* <- keyword.control */
@@ -617,11 +805,20 @@ using namespace myNameSpace;
 /* <- keyword.control */
 /*    ^ keyword.control */
 
-namespace abc /* Neither this comment... */
-/*            ^ comment.block */
+namespace ns :: abc /* Neither this comment... */
+/*^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.namespace */
+/*        ^^^^^^^^^ entity.name.namespace */
+/*           ^^ punctuation.accessor */
+/*                  ^ comment.block */
 // ...nor this comment is highlighted
 /* <- comment.line */
-{}
+{
+/* <- meta.namespace meta.block punctuation.definition.block.begin */
+    void nsfunc() {
+        /* ^ entity.name.function */
+    }
+}
+/* <- meta.namespace meta.block punctuation.definition.block.end */
 
 /////////////////////////////////////////////
 // Classes, structs, unions and enums
@@ -629,6 +826,7 @@ namespace abc /* Neither this comment... */
 
 class BaseClass;
 /*^^^^^^^^^^^^^ meta.class */
+/*    ^ - meta.class meta.class */
 /*    ^^^^^^^^^ entity.name.class.forward-decl */
 
 class BaseClass // comment
@@ -638,6 +836,13 @@ class BaseClass // comment
 public :
 /* <- storage.modifier */
     tupleTmpl<int,2> max(tupleGen<int,2> a, tupleGen<int,2> b);
+/*                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.method */
+/*                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.method.parameters meta.group */
+/*                      ^ punctuation.definition.group.begin */
+/*                                       ^ variable.parameter */
+/*                                        ^ punctuation.separator */
+/*                                                          ^ variable.parameter */
+/*                                                           ^ punctuation.definition.group.end */
 /*           ^ punctuation.definition.generic.begin */
 /*            ^ storage.type */
 /*                 ^ punctuation.definition.generic.end */
@@ -653,6 +858,11 @@ private:
     /* <- storage.modifier */
 
     virtual void doSomething() const = 0;
+    /*           ^^^^^^^^^^^^^^^^^^^^^^^ meta.method */
+    /*           ^ - meta.method meta.method */
+    /*                      ^^ meta.method.parameters meta.group */
+    /*                      ^ punctuation.definition.group.begin */
+    /*                       ^ punctuation.definition.group.end */
     /* <- storage.modifier */
     /*           ^ entity.name.function */
     /*                         ^ storage.modifier */
@@ -660,22 +870,52 @@ private:
 
     template<typename A>
     void func(){}
+/*       ^^^^^^^^ meta.method */
+/*           ^^ meta.method.parameters meta.group */
+/*           ^ punctuation.definition.group.begin */
+/*            ^ punctuation.definition.group.end */
+/*             ^^ meta.block */
+/*             ^ punctuation.definition.block.begin */
+/*              ^ punctuation.definition.block.end */
 /*       ^^^^ entity.name.function */
 
     template<typename A>
+    void func<A>(){}
+/*       ^^^^^^^^^^^ meta.method */
+/*       ^^^^ entity.name.function */
+/*           ^ punctuation.definition.generic.begin */
+/*             ^ punctuation.definition.generic.end */
+/*              ^^ meta.method.parameters meta.group */
+/*              ^ punctuation.definition.group.begin */
+/*               ^ punctuation.definition.group.end */
+/*                ^^ meta.block */
+/*                ^ punctuation.definition.block.begin */
+/*                 ^ punctuation.definition.block.end */
+
+    template<typename A>
     BaseClass(){}
+/*  ^^^^^^^^^^^^^ meta.method */
+/*  ^^^^^^^^^ meta.method.constructor */
 /*  ^^^^^^^^^ entity.name.function */
 
     ~BaseClass() {}
+/*  ^^^^^^^^^^^^^^^ meta.method */
+/*  ^^^^^^^^^^ meta.method.destructor */
 /*  ^^^^^^^^^^ entity.name.function */
 
     BaseClass operator [] ()
+/*            ^^^^^^^^^^^^^^ meta.method */
+/*                        ^^ meta.method.parameters */
 /*            ^^^^^^^^^^^ entity.name.function */
     {}
 
     BaseClass operator=
+/*            ^^^^^^^^^ meta.method */
 /*            ^^^^^^^^^ entity.name.function */
     () {}
+/*  ^^^^^ meta.method */
+/*  ^^ meta.method.parameters */
+/*     ^^ meta.block */
 };
 
 class DerivedClass : public ::BaseClass // Comment
@@ -683,7 +923,9 @@ class DerivedClass : public ::BaseClass // Comment
 /*                                      ^ comment.line */
 {
     ~DerivedClass() override;
-    /* <- meta.method */
+    /* <- meta.method.destructor */
+    /*^^^^^^^^^^^^^^^^^^^^^^ meta.method */
+    /*^^^^^^^^^^^ meta.method.destructor */
     /*              ^ storage.modifier */
     virtual void doSomething() const override final;
     /*                         ^ storage.modifier */
@@ -692,18 +934,25 @@ class DerivedClass : public ::BaseClass // Comment
  protected:
 /*^^^^^^^^ storage.modifier */
   DerivedClass() override
+/*^^^^^^^^^^^^^^^^^^^^^^^ meta.method */
+/*^^^^^^^^^^^^ meta.method.constructor */
 /*                ^ storage.modifier */
       : a(a),
-/*     ^ meta.class.constructor.initializer-list */
+/*    ^^^^^^^ meta.method.constructor.initializer-list */
         base_id_(BaseClass::None().ToInt()),
+/*      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.method.constructor.initializer-list */
 /*      ^ variable.other.readwrite.member */
 /*                        ^ punctuation.accessor */
 /*               ^^^^^^^^^^^^^^^^^ meta.function-call */
 /*                          ^^^^ variable.function */
 /*                                ^^^^^^ meta.method-call */
 /*                                 ^^^^^ variable.function */
+/*                                         ^ punctuation.separator */
         bounds_(NULL),
+/*      ^^^^^^^^^^^^^^ meta.method.constructor.initializer-list */
         bit_field_(0) {
+/*      ^^^^^^^^^^^^^^^ meta.method */
+/*      ^^^^^^^^^^^^^ meta.method.constructor.initializer-list */
             char * a = "sprintf";
             char * b = sprintf("Testing %s", a);
 /*                     ^^^^^^^^^ meta.function-call */
@@ -717,6 +966,7 @@ class DerivedClass : public ::BaseClass // Comment
 /*                  ^^^^^^^^^^^^^^ meta.method-call */
 /*                    ^^^^^^^^^^ variable.function */
         }
+/*      ^ meta.method meta.block punctuation.definition.block.end */
 
 /* <- - meta.class.constructor.initializer-list */
 
@@ -736,7 +986,7 @@ class class1<A> : class2<A>
 {}
 
 class FooBar {
-/*           ^ meta.class meta.block punctuation.definition.block */
+/*           ^ meta.class meta.block punctuation.definition.block.begin */
     explicit FooBar(int a);
 /*           ^^^^^^^^^^^^^ meta.method */
 /*  ^^^^^^^^ storage.modifier */
@@ -793,12 +1043,24 @@ private:
     enum
 /*  ^^^^ meta.enum storage.type */
     {
-/*  ^ meta.enum punctuation.definition.block */
+/*  ^ meta.enum punctuation.definition.block.begin */
         A = 1,
         B = 20 / 5
     }
-/*  ^ meta.enum punctuation.definition.block */
-/*   ^ - meta.enum punctuation.definition.block */
+/*  ^ meta.enum punctuation.definition.block.end */
+/*   ^ - meta.enum */
+
+    friend int func(int a, int b);
+/*  ^ storage.modifier */
+/*         storage.type */
+/*             ^ - entity.name.function */
+/*             ^ - meta.function-call */
+
+    friend class ::FooBar;
+/*  ^ storage.modifier */
+/*         ^ storage.type
+/*               ^^ punctuation.accessor */
+/*                 ^ - entity */
 
     #if 0
     /*  ^ constant.numeric */
@@ -816,36 +1078,48 @@ private:
     /*  ^ comment.block */
     }
     #endif
+
+    MACRO_NOT_CONSTRUCTOR(FooBar);
+/*  ^ meta.function-call variable.function - entity.name.function */
+
+    MACRO_NOT_CONSTRUCTOR2(FooBar,
+/*  ^ meta.function-call variable.function - entity.name.function */
+        FriendClass);
 }
-/* <- meta.class meta.block punctuation.definition.block */
- /* <- - meta.class meta.block punctuation.definition.block */
+/* <- meta.class meta.block punctuation.definition.block.end */
+ /* <- - meta.class meta.block */
 
 struct bar {
 /*^^^^^^^^^^ meta.struct */
 /*^^^^ storage.type */
 /*     ^^^ entity.name.struct */
-/*         ^ meta.block punctuation.definition.block */
+/*         ^ meta.block punctuation.definition.block.begin */
     bar()
 /*  ^^^^^ meta.method */
 /*  ^^^ entity.name.function */
     {}
 }
-/* <- meta.struct meta.block punctuation.definition.block */
- /* <- - meta.struct meta.block punctuation.definition.block */
+/* <- meta.struct meta.block punctuation.definition.block.end */
+ /* <- - meta.struct meta.block */
 
 enum baz {
 /*^^^^^^^^ meta.enum */
 /* <- meta.enum storage.type */
 /*   ^^^ entity.name.enum */
-/*       ^ meta.block punctuation.definition.block */
+/*       ^ meta.block punctuation.definition.block.begin */
     FOO = 1,
 /*      ^ keyword.operator.assignment */
 /*        ^ constant.numeric */
     BAR = 2,
-    BAZ = 3
+    BAZ = 3,
+#if 0
+/*  ^ constant.numeric */
+    QUX = 4,
+/*  ^ comment.block */
+#endif
 }
-/* <- meta.enum meta.block punctuation.definition.block */
- /* <- - meta.enum meta.block punctuation.definition.block */
+/* <- meta.enum meta.block punctuation.definition.block.end */
+ /* <- - meta.enum meta.block */
 
 enum class qux : std::uint8_t
 /*^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.enum */
@@ -854,23 +1128,41 @@ enum class qux : std::uint8_t
 /*             ^ punctuation.separator */
 /*               ^^^^^^^^^^^^ entity.other.inherited-class */
 {
-/* <- meta.block punctuation.definition.block */
+/* <- meta.block punctuation.definition.block.begin */
     FOO = 1,
     BAR = 2,
 /*      ^ keyword.operator.assignment */
 /*        ^ constant.numeric */
     BAZ = 3
 }
-/* <- meta.enum meta.block punctuation.definition.block */
- /* <- - meta.enum meta.block punctuation.definition.block */
+/* <- meta.enum meta.block punctuation.definition.block.end */
+ /* <- - meta.enum meta.block */
+
+enum LineEnding : uint32_t;
+/*^^^^^^^^^^^^^^^^^^^^^^^^ meta.enum */
+/*   ^^^^^^^^^^ entity.name.enum.forward-decl */
+/*              ^ punctuation.separator */
+/*                ^^^^^^^^ entity.other.inherited-class */
+/*                        ^ - meta.enum */
 
 union foobaz {
 /* <- meta.union storage.type */
 /*    ^^^^^^ entity.name.union */
-/*           ^ meta.block punctuation.definition.block */
+/*           ^ meta.block punctuation.definition.block.begin */
 }
-/* <- meta.union meta.block punctuation.definition.block */
- /* <- - meta.union meta.block punctuation.definition.block */
+/* <- meta.union meta.block punctuation.definition.block.end */
+ /* <- - meta.union meta.block */
+
+// Class name that looks like a possible macro
+class SP {}
+/*    ^^ entity.name.class */
+
+class MyClass MACRO MACRO2
+/* ^ storage.type */
+/*    ^ entity.name.class */
+/*            ^ - entity */
+/*                  ^ - entity */
+{}
 
 // Class using macro to handle __declspec() on Windows
 class SK_API SkBitmap {}
@@ -891,7 +1183,19 @@ class __declspec(dllimport) SkBitmap {}
 // Test preprocessor branching and C blocks
 /////////////////////////////////////////////
 
-int foo(int val)
+int foo(int val, float val2, bool val3 = false)
+/*  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.function */
+/*     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.function.parameters meta.group */
+/*     ^ punctuation.definition.group.begin */
+/*                                            ^ punctuation.definition.group.end */
+/*          ^^^ variable.parameter */
+/*             ^ punctuation.separator */
+/*                     ^^^^ variable.parameter */
+/*                         ^ punctuation.separator */
+/*                           ^^^^ storage.type */
+/*                                ^^^^ variable.parameter */
+/*                                     ^ keyword.operator.assignment */
+/*                                       ^^^^^ constant.language */
 {
     myClass *result;
     result->kk = func(val);
@@ -905,7 +1209,7 @@ int foo(int val)
 #endif
  /* <- keyword.control.import */
     }
-/*  ^ meta.block meta.block punctuation.definition.block */
+/*  ^ meta.block meta.block punctuation.definition.block.end */
 /*   ^ - meta.block meta.block */
 
 #ifndef DEBUG
@@ -915,7 +1219,7 @@ int foo(int val)
         val += 1;
 #ifndef DEBUG
     }
-/*  ^ meta.function meta.block meta.block punctuation.definition.block */
+/*  ^ meta.function meta.block meta.block punctuation.definition.block.end */
 /*   ^ - meta.block meta.block */
 #endif
 
@@ -926,21 +1230,21 @@ int foo(int val)
     ;
 
     if (val == -1) {
-/*                 ^ meta.block meta.block punctuation.definition.block */
+/*                 ^ meta.block meta.block punctuation.definition.block.begin */
 #else
  /* <- keyword.control.import */
     if (val == -2) {
-/*                 ^ meta.block meta.block punctuation.definition.block */
+/*                 ^ meta.block meta.block punctuation.definition.block.begin */
 #endif
  /* <- keyword.control.import */
         val += 1;
     }
-/*  ^ meta.block punctuation.definition.block */
+/*  ^ meta.block punctuation.definition.block.end */
 /*   ^ - meta.block meta.block */
 
     return -1;
 }
-/* <- meta.function punctuation.definition.block */
+/* <- meta.function punctuation.definition.block.end */
  /* <- - meta.function */
 
 #if 0
@@ -960,6 +1264,20 @@ int disabled_func() {
 }
 #endif
 
+#if 1
+    int a = 1;
+    #if 0
+/*      ^ constant.numeric */
+        int b = 2;
+/*      ^ comment.block */
+    #else
+        int c = 3;
+    #endif
+#else
+    int d = 4;
+/*  ^ comment.block */
+#endif
+
 /////////////////////////////////////////////
 // Matching various function definitions
 /////////////////////////////////////////////
@@ -975,9 +1293,9 @@ int /* comment */ * myfunc
 /*                ^ keyword.operator */
 /*                  ^^^^^^ entity.name.function */
 (int * a)
-/* <- punctuation.definition.parameters */
+/* <- punctuation.definition.group.begin */
 /*   ^ keyword.operator */
-/*      ^ punctuation.definition.parameters */
+/*      ^ punctuation.definition.group.end */
 {
 
 }
@@ -1023,9 +1341,10 @@ funcname2
 }
 
 MACRO_CALL(int) macro_prefixed_func(){}
-/* ^ meta.function-call */
-/*        ^ punctuation.definition.parameters */
-/*            ^ punctuation.definition.parameters */
+/*^^^^^^^^^^^^^ meta.function-call */
+/*        ^^^^^ meta.group */
+/*        ^ punctuation.definition.group.begin */
+/*            ^ punctuation.definition.group.end */
 /*              ^ entity.name.function */
 
 int* return_type_pointer_no_space(){}
@@ -1058,6 +1377,18 @@ void sayHi()
 /*      ^^^^^^^^^^ variable.function */
 /*      ^^ punctuation.accessor */
 /*           ^^ punctuation.accessor */
+
+    foobaz<int>();
+/*  ^^^^^^^^^^^^^ meta.function-call */
+/*  ^^^^^^ variable.function */
+/*        ^ punctuation.definition.generic.begin */
+/*            ^ punctuation.definition.generic.end */
+/*             ^^ meta.group */
+
+    int a[5];
+/*       ^^^ meta.brackets */
+/*       ^ punctuation.definition.brackets.begin */
+/*         ^ punctuation.definition.brackets.end */
 }
 
 /////////////////////////////////////////////

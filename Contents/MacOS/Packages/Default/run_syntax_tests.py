@@ -287,7 +287,7 @@ def package_relative_path(view):
         # of the Packages repository.
         if relative_path:
             loader_version = sublime.load_resource(relative_path)
-            with open(path, 'r', encoding='utf-8') as f:
+            with open(path, 'r', encoding='utf-8', newline='') as f:
                 fs_version = f.read()
             if fs_version != loader_version:
                 relative_path = None

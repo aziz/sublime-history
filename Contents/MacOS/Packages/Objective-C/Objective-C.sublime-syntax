@@ -267,12 +267,15 @@ contexts:
     - match: '\)|\}'
       scope: invalid.illegal.stray-bracket-end.objc
     - include: bracketed-content
+    - include: brackets
 
   late-expressions:
     - include: modifiers-parens
     - include: modifiers
     - include: types
     - include: function-call
+    - match: ';'
+      scope: punctuation.terminator.objc
 
   comments:
     - include: scope:source.c#comments
@@ -313,7 +316,7 @@ contexts:
   ## Objective-C-specific contexts
 
   bracketed-content:
-    - match: '(\[)\s*'
+    - match: '(\[)\s*(?={{identifier}}\s+[^\s,])'
       captures:
         1: punctuation.section.scope.begin.objc
       push:
@@ -396,7 +399,7 @@ contexts:
       push:
         - meta_scope: meta.function.objc
         - match: '\{'
-          scope: punctuation.definition.block.objc
+          scope: punctuation.definition.block.begin.objc
           set:
             - meta_scope: meta.block.objc
             - match: (?=^\s*#\s*(elif|else|endif)\b)
@@ -404,10 +407,10 @@ contexts:
             - match: (?=@end\b)
               pop: true
             - match: '\}'
-              scope: punctuation.definition.block.objc
+              scope: punctuation.definition.block.end.objc
               pop: true
             - include: statements
-        - match: '(?=#|@end)|;'
+        - match: '(?=#|@end|;)'
           pop: true
         - match: '\('
           scope: meta.return-type.objc punctuation.definition.type.objc
@@ -521,7 +524,26 @@ contexts:
     - include: comments
     - match: \*
       scope: keyword.operator.objc
-    - match: '(?=\b({{before_tag}}|{{control_keywords}})\b)'
+    # If a struct/union/enum followed by a name that is not a macro or declspec
+    # then this is likely a return type of a function. This is uncommon.
+    - match: |-
+        (?x:
+          ({{before_tag}})
+          \s+
+          (?=
+            (?![[:upper:][:digit:]_]+\b|__declspec)
+            {{identifier}}
+            (\s+{{identifier}}|\s*\*+)
+          )
+        )
+      captures:
+        1: storage.type.objc
+      set: global-maybe-function
+    # The previous match handles return types of struct/enum/etc from a func,
+    # there this one exits the context to allow matching an actual struct/union
+    - match: '(?=\b({{before_tag}})\b)'
+      set: data-structures
+    - match: '(?=\b({{control_keywords}})\b)'
       pop: true
     - match: '(?=\s)'
       set: global-maybe-function
@@ -529,11 +551,12 @@ contexts:
     - match: '({{identifier}})\s*(\()(?=[^\)]+\))'
       captures:
         1: variable.function.objc
-        2: punctuation.definition.parameters.objc
+        2: meta.group.objc punctuation.definition.group.begin.objc
       push:
         - meta_scope: meta.function-call.objc
+        - meta_content_scope: meta.group.objc
         - match: '\)'
-          scope: punctuation.definition.parameters.objc
+          scope: meta.group.objc punctuation.definition.group.end.objc
           pop: true
         - include: expressions
     - match: (?={{identifier}}\s*\()
@@ -558,7 +581,7 @@ contexts:
     - match: '{{identifier}}(?!\s*(\(|$))(?=\s+)'
     # Real function definition
     - match: '{{identifier}}(?=\s*(\(|$))'
-      scope: entity.name.function.objc
+      scope: meta.function.objc entity.name.function.objc
       set: function-definition-params
     - match: '(?=\S)'
       pop: true
@@ -566,19 +589,25 @@ contexts:
   function-definition-params:
     - meta_content_scope: meta.function.objc
     - include: comments
-    - match: \(
-      scope: punctuation.definition.parameters.objc
+    - match: '(?=\()'
       set:
-        - match : \)
-          scope: punctuation.definition.parameters.objc
-          set: function-definition-continue
-        - include: expressions
+        - match: \(
+          scope: meta.function.parameters.objc meta.group.objc punctuation.definition.group.begin.objc
+          set:
+            - meta_content_scope: meta.function.parameters.objc meta.group.objc
+            - match : \)
+              scope: punctuation.definition.group.end.objc
+              set: function-definition-continue
+            - match: '{{identifier}}(?=\s*(,|\)))'
+              scope: variable.parameter.objc
+            - include: expressions
     - match: (?=\S)
       pop: true
 
   function-definition-continue:
     - meta_content_scope: meta.function.objc
-    - match: ';'
+    - include: comments
+    - match: '(?=;)'
       pop: true
     - match: \b(const|final|noexcept|override)\b
       scope: storage.modifier.objc
@@ -590,35 +619,132 @@ contexts:
   function-definition-body:
     - meta_content_scope: meta.function.objc
     - match: '\{'
-      scope: meta.block.objc punctuation.definition.block.objc
+      scope: meta.block.objc punctuation.definition.block.begin.objc
       set:
         - meta_content_scope: meta.function.objc meta.block.objc
         - match: '\}'
-          scope: meta.function.objc meta.block.objc punctuation.definition.block.objc
+          scope: meta.function.objc meta.block.objc punctuation.definition.block.end.objc
           pop: true
         - match: (?=^\s*#\s*(elif|else|endif)\b)
           pop: true
+        - match: '(?=({{before_tag}})([^(;]+$|.*\{))'
+          push: data-structures
         - include: statements
+
+  data-structures:
+    - match: '\bstruct\b'
+      scope: storage.type.objc
+      set: data-structures-struct-definition
+    - match: '\benum\b'
+      scope: storage.type.objc
+      set: data-structures-enum-definition
+    - match: '\bunion\b'
+      scope: storage.type.objc
+      set: data-structures-union-definition
+    - match: '(?=\S)'
+      pop: true
+
+  data-structures-struct-definition:
+    - meta_scope: meta.struct.objc
+    - include: data-structures-definition-common-begin
+    - match: '{{identifier}}(?=\s*;)'
+      scope: entity.name.struct.forward-decl.objc
+    - match: '{{identifier}}'
+      scope: entity.name.struct.objc
+    - match: '(?=;)'
+      pop: true
+    - match: '\{'
+      scope: meta.block.objc punctuation.definition.block.begin.objc
+      set:
+        - meta_content_scope: meta.struct.objc meta.block.objc
+        - match: '\}'
+          scope: meta.struct.objc meta.block.objc punctuation.definition.block.end.objc
+          pop: true
+        - include: data-structures-body
+
+  data-structures-enum-definition:
+    - meta_scope: meta.enum.objc
+    - include: data-structures-definition-common-begin
+    - match: '{{identifier}}(?=\s*;)'
+      scope: entity.name.enum.forward-decl.objc
+    - match: '{{identifier}}'
+      scope: entity.name.enum.objc
+    - match: '(?=;)'
+      pop: true
+    - match: '\{'
+      scope: meta.block.objc punctuation.definition.block.begin.objc
+      set:
+        - meta_content_scope: meta.enum.objc meta.block.objc
+        # Enums don't support methods so we have a simplified body
+        - match: '\}'
+          scope: meta.enum.objc meta.block.objc punctuation.definition.block.end.objc
+          pop: true
+        - include: data-structures-body
+
+  data-structures-union-definition:
+    - meta_scope: meta.union.objc
+    - include: data-structures-definition-common-begin
+    - match: '{{identifier}}(?=\s*;)'
+      scope: entity.name.union.forward-decl.objc
+    - match: '{{identifier}}'
+      scope: entity.name.union.objc
+    - match: '(?=;)'
+      pop: true
+    - match: '\{'
+      scope: meta.block.objc punctuation.definition.block.begin.objc
+      set:
+        - meta_content_scope: meta.union.objc meta.block.objc
+        - match: '\}'
+          scope: meta.union.objc meta.block.objc punctuation.definition.block.end.objc
+          pop: true
+        - include: data-structures-body
+
+  data-structures-definition-common-begin:
+    - include: comments
+    - include: modifiers-parens
+    - include: modifiers
+    # Handle macros so they aren't matched as the class name
+    - match: '\b[[:upper:][:digit:]_]+\b'
+
+  data-structures-definition-common-end:
+    - match: '(?=;)'
+      pop: true
+
+  data-structures-body:
+    - include: preprocessor-data-structures
+    - match: '(?={{before_tag}})'
+      push: data-structures
+    - include: expressions
 
   block:
     - match: '\{'
-      scope: punctuation.definition.block.objc
+      scope: punctuation.definition.block.begin.objc
       push:
         - meta_scope: meta.block.objc
         - match: (?=^\s*#\s*(elif|else|endif)\b)
           pop: true
         - match: '\}'
-          scope: punctuation.definition.block.objc
+          scope: punctuation.definition.block.end.objc
           pop: true
         - include: statements
 
   parens:
     - match: \(
-      scope: punctuation.definition.parameters.objc
+      scope: punctuation.definition.group.begin.objc
       push:
-        - meta_scope: meta.parens.objc
+        - meta_scope: meta.group.objc
         - match: \)
-          scope: punctuation.definition.parameters.objc
+          scope: punctuation.definition.group.end.objc
+          pop: true
+        - include: expressions
+
+  brackets:
+    - match: \[
+      scope: punctuation.definition.brackets.begin.objc
+      push:
+        - meta_scope: meta.brackets.objc
+        - match: \]
+          scope: punctuation.definition.brackets.end.objc
           pop: true
         - include: expressions
 
@@ -635,23 +761,25 @@ contexts:
     - match: \b(__attribute__)\s*(\(\()
       captures:
         1: storage.modifier.objc
-        2: punctuation.definition.parameters.objc
+        2: meta.group.objc punctuation.definition.group.begin.objc
       push :
         - meta_scope: meta.attribute.objc
+        - meta_content_scope: meta.group.objc
         - include: parens
         - include: strings
         - match: \)\)
-          scope: punctuation.definition.parameters.objc
+          scope: meta.group.objc punctuation.definition.group.end.objc
           pop: true
 
   keywords-parens:
     - match: '\b(sizeof)\b\s*(\()'
       captures:
         1: keyword.operator.word.objc
-        2: punctuation.definition.parameters.objc
+        2: meta.group.objc punctuation.definition.group.begin.objc
       push:
+        - meta_content_scope: meta.group.objc
         - match: '\)'
-          scope: punctuation.definition.parameters.objc
+          scope: meta.group.objc punctuation.definition.group.end.objc
           pop: true
         - include: expressions
 
@@ -659,14 +787,13 @@ contexts:
     - match: \btypedef\b
       scope: storage.type.objc
       push:
-        - match: ({{identifier}})?\s*;
+        - match: ({{identifier}})?\s*(?=;)
           captures:
             1: entity.name.type.typedef.objc
           pop: true
         - match: \b(struct)\s+({{identifier}})
           captures:
             1: storage.type.objc
-            2: entity.name.type.struct.objc
         - include: expressions
 
   function-call:
@@ -677,13 +804,71 @@ contexts:
       - match: '{{identifier}}'
         scope: variable.function.objc
       - match: '\('
-        scope: punctuation.definition.parameters.objc
+        scope: meta.group.objc punctuation.definition.group.begin.objc
         set:
-          - meta_content_scope: meta.function-call.objc
+          - meta_content_scope: meta.function-call.objc meta.group.objc
           - match : \)
-            scope: meta.function-call.objc punctuation.definition.parameters.objc
+            scope: meta.function-call.objc meta.group.objc punctuation.definition.group.end.objc
             pop: true
           - include: expressions
+
+  ## Preprocessor for data-structures
+
+  preprocessor-data-structures:
+    - include: preprocessor-rule-enabled-data-structures
+    - include: preprocessor-rule-disabled-data-structures
+
+  preprocessor-rule-disabled-data-structures:
+    - match: ^\s*((#if)\s+(0))\b
+      captures:
+        1: meta.preprocessor.objc
+        2: keyword.control.import.objc
+        3: constant.numeric.preprocessor.objc
+      push:
+        - match: ^\s*(#\s*endif)\b
+          captures:
+            1: meta.preprocessor.objc keyword.control.import.objc
+          pop: true
+        - match: ^\s*(#\s*else)\b
+          captures:
+            1: meta.preprocessor.objc keyword.control.import.else.objc
+          push:
+            - match: (?=^\s*#\s*endif\b)
+              pop: true
+            - include: negated-block
+            - include: data-structures-body
+        - match: ""
+          push:
+            - meta_scope: comment.block.preprocessor.if-branch.objc
+            - match: (?=^\s*#\s*(else|endif)\b)
+              pop: true
+            - include: scope:source.c#preprocessor-disabled
+
+  preprocessor-rule-enabled-data-structures:
+    - match: ^\s*((#if)\s+(0*1))\b
+      captures:
+        1: meta.preprocessor.objc
+        2: keyword.control.import.objc
+        3: constant.numeric.preprocessor.objc
+      push:
+        - match: ^\s*(#\s*endif)\b
+          captures:
+            1: meta.preprocessor.objc keyword.control.import.objc
+          pop: true
+        - match: ^\s*(#\s*else)\b
+          captures:
+            1: meta.preprocessor.objc keyword.control.import.else.objc
+          push:
+            - meta_content_scope: comment.block.preprocessor.else-branch.objc
+            - match: (?=^\s*#\s*endif\b)
+              pop: true
+            - include: scope:source.c#preprocessor-disabled
+        - match: ""
+          push:
+            - match: (?=^\s*#\s*(else|endif)\b)
+              pop: true
+            - include: negated-block
+            - include: data-structures-body
 
   ## Preprocessor for global
 
@@ -720,6 +905,7 @@ contexts:
           push:
             - match: (?=^\s*#\s*endif\b)
               pop: true
+            - include: preprocessor-global
             - include: negated-block
             - include: global
         - match: ""
@@ -752,6 +938,7 @@ contexts:
           push:
             - match: (?=^\s*#\s*(else|endif)\b)
               pop: true
+            - include: preprocessor-global
             - include: negated-block
             - include: global
 
@@ -784,8 +971,9 @@ contexts:
     - match: (?=^\s*#\s*(elif|else)\b)
       push: preprocessor-elif-else-branch-global
     - match: \{
-      scope: punctuation.definition.block.objc
+      scope: punctuation.definition.block.begin.objc
       set: preprocessor-block-if-branch-global
+    - include: preprocessor-global
     - include: negated-block
     - include: global
 
@@ -798,9 +986,9 @@ contexts:
     - match: (?=^\s*#\s*(elif|else)\b)
       push: preprocessor-elif-else-branch-global
     - match: \}
-      scope: punctuation.definition.block.objc
+      scope: punctuation.definition.block.end.objc
       set: preprocessor-if-branch-global
-    - include: global
+    - include: statements
 
   preprocessor-block-finish-global:
     - meta_scope: meta.block.objc
@@ -809,7 +997,7 @@ contexts:
         1: meta.preprocessor.objc keyword.control.import.objc
       set: preprocessor-block-finish-if-branch-global
     - match: \}
-      scope: punctuation.definition.block.objc
+      scope: punctuation.definition.block.end.objc
       pop: true
     - include: statements
 
@@ -819,13 +1007,14 @@ contexts:
         1: meta.preprocessor.objc keyword.control.import.objc
       pop: true
     - match: \}
-      scope: punctuation.definition.block.objc
+      scope: punctuation.definition.block.end.objc
       set: preprocessor-if-branch-global
     - include: statements
 
   preprocessor-elif-else-branch-global:
     - match: (?=^\s*#\s*endif\b)
       pop: true
+    - include: preprocessor-global
     - include: negated-block
     - include: global
 
@@ -912,7 +1101,7 @@ contexts:
     - match: (?=^\s*#\s*(elif|else)\b)
       push: preprocessor-elif-else-branch-statements
     - match: \{
-      scope: punctuation.definition.block.objc
+      scope: punctuation.definition.block.begin.objc
       set: preprocessor-block-if-branch-statements
     - include: negated-block
     - include: statements
@@ -926,7 +1115,7 @@ contexts:
     - match: (?=^\s*#\s*(elif|else)\b)
       push: preprocessor-elif-else-branch-statements
     - match: \}
-      scope: punctuation.definition.block.objc
+      scope: punctuation.definition.block.end.objc
       set: preprocessor-if-branch-statements
     - include: statements
 
@@ -937,7 +1126,7 @@ contexts:
         1: meta.preprocessor.objc keyword.control.import.objc
       set: preprocessor-block-finish-if-branch-statements
     - match: \}
-      scope: punctuation.definition.block.objc
+      scope: punctuation.definition.block.end.objc
       pop: true
     - include: statements
 
@@ -947,7 +1136,7 @@ contexts:
         1: meta.preprocessor.objc keyword.control.import.objc
       pop: true
     - match: \}
-      scope: punctuation.definition.block.objc
+      scope: punctuation.definition.block.end.objc
       set: preprocessor-if-branch-statements
     - include: statements
 
@@ -961,10 +1150,10 @@ contexts:
 
   negated-block:
     - match: '\}'
-      scope: punctuation.definition.block.objc
+      scope: punctuation.definition.block.end.objc
       push:
         - match: '\{'
-          scope: punctuation.definition.block.objc
+          scope: punctuation.definition.block.begin.objc
           pop: true
         - match: (?=^\s*#\s*(elif|else|endif)\b)
           pop: true
@@ -972,33 +1161,38 @@ contexts:
 
   preprocessor-macro-define:
     - match: ^\s*(\#\s*define)\b
-      scope: keyword.control.import.define.objc
+      captures:
+        1: meta.preprocessor.macro.objc keyword.control.import.define.objc
       push:
-        - meta_scope: meta.preprocessor.macro.objc
+        - meta_content_scope: meta.preprocessor.macro.objc
         - include: scope:source.c#preprocessor-line-continuation
-        - include: scope:source.c#preprecessor-line-ending
-        - match: '({{identifier}})(\()'
-          captures:
-            1: entity.name.function.preprocessor.objc
-            2: punctuation.definition.parameters.objc
-          set: [preprocessor-macro-definition, preprocessor-macro-params]
+        - include: scope:source.c#preprocessor-line-ending
+        - include: scope:source.c#preprocessor-comments
+        - match: '({{identifier}})(?=\()'
+          scope: entity.name.function.preprocessor.objc
+          set:
+            - match: '\('
+              scope: punctuation.definition.group.begin.objc
+              set: preprocessor-macro-params
         - match: '{{identifier}}'
           scope: entity.name.constant.preprocessor.objc
           set: preprocessor-macro-definition
 
   preprocessor-macro-params:
-    - meta_scope: meta.preprocessor.params.macro.objc
+    - meta_scope: meta.preprocessor.macro.parameters.objc meta.group.objc
     - match: '{{identifier}}'
       scope: variable.parameter.objc
     - match: \)
-      scope: punctuation.definition.parameters.objc
-      pop: true
+      scope: punctuation.definition.group.end.objc
+      set: preprocessor-macro-definition
     - match: ','
+      scope: punctuation.separator.objc
       push:
         - match: '{{identifier}}'
           scope: variable.parameter.objc
           pop: true
         - include: scope:source.c#preprocessor-line-continuation
+        - include: scope:source.c#preprocessor-comments
         - match: '\.\.\.'
           scope: punctuation.definition.variadic.objc
         - match: '(?=\))'
@@ -1011,6 +1205,7 @@ contexts:
         - match: '\S+'
           scope: invalid.illegal.unexpected-character.objc
     - include: scope:source.c#preprocessor-line-continuation
+    - include: scope:source.c#preprocessor-comments
     - match: '\.\.\.'
       scope: punctuation.definition.variadic.objc
     - match: (/\*).*(\*/)
@@ -1022,12 +1217,15 @@ contexts:
       scope: invalid.illegal.unexpected-end-of-line.objc
 
   preprocessor-macro-definition:
-    - meta_scope: meta.preprocessor.macro.definition.objc
+    - meta_content_scope: meta.preprocessor.macro.objc
     - include: scope:source.c#preprocessor-line-continuation
-    - include: scope:source.c#preprecessor-line-ending
+    - include: scope:source.c#preprocessor-line-ending
+    - include: scope:source.c#preprocessor-comments
     # Don't define blocks in define statements
-    - match: '\{|\}'
-      scope: punctuation.definition.block.objc
+    - match: '\{'
+      scope: punctuation.definition.block.begin.objc
+    - match: '\}'
+      scope: punctuation.definition.block.end.objc
     - include: expressions
 
   preprocessor-other:
@@ -1037,7 +1235,7 @@ contexts:
       push:
         - meta_scope: meta.preprocessor.objc
         - include: scope:source.c#preprocessor-line-continuation
-        - include: scope:source.c#preprecessor-line-ending
+        - include: scope:source.c#preprocessor-line-ending
         - include: scope:source.c#preprocessor-comments
         - match: \bdefined\b
           scope: keyword.control.objc
@@ -1051,7 +1249,7 @@ contexts:
       push:
         - meta_scope: meta.preprocessor.diagnostic.objc
         - include: scope:source.c#preprocessor-line-continuation
-        - include: scope:source.c#preprecessor-line-ending
+        - include: scope:source.c#preprocessor-line-ending
         - include: scope:source.c#preprocessor-comments
         - include: strings
         - match: '\S+'
@@ -1062,7 +1260,7 @@ contexts:
       push:
         - meta_scope: meta.preprocessor.include.obj
         - include: scope:source.c#preprocessor-line-continuation
-        - include: scope:source.c#preprecessor-line-ending
+        - include: scope:source.c#preprocessor-line-ending
         - include: scope:source.c#preprocessor-comments
         - match: '"'
           scope: punctuation.definition.string.begin.objc

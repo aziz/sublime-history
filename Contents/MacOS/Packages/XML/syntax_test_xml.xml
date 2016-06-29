@@ -36,6 +36,44 @@
 <!--                                        ^ punctuation.definition.constant -->
 <!--                                          ^ punctuation.definition.tag.end -->
 
+<!DOCTYPE data [
+<!-- ^ keyword.doctype -->
+<!--      ^ variable.documentroot -->
+
+<!ENTITY auml  "&#228;">
+<!-- ^ keyword.entity -->
+<!--      ^ variable.entity -->
+<!--           ^ string.quoted.double -->
+<!--            ^ constant.character.entity -->
+
+<!ELEMENT ArticleTitle (#PCDATA)>
+<!-- ^ keyword.element -->
+<!--      ^ variable.element -->
+<!--                   ^ punctuation.definition.group -->
+<!--                    ^ constant.other -->
+<!--                           ^ punctuation.definition.group -->
+
+<!ELEMENT AbstractText (#PCDATA)>
+
+<!ELEMENT info (ArticleTitle,AbstractText)+>
+<!-- ^ keyword.element -->
+<!--      ^ variable.element -->
+<!--           ^ punctuation.definition.group -->
+<!--                        ^ punctuation.separator -->
+<!--                                     ^ punctuation.definition.group -->
+<!--                                      ^ keyword.operator -->
+
+<!ATTLIST image width CDATA #REQUIRED>
+<!-- ^ keyword.attlist -->
+<!--      ^ variable.element -->
+<!--            ^ variable.attribute-name -->
+
+<!NOTATION name PUBLIC "public_ID" "URI">
+<!-- ^ keyword.notation -->
+<!--       ^ variable.notation -->
+<!--                   ^ string.quoted.double -->
+
+]>
 
 <!--
   Comments
@@ -68,6 +106,9 @@
     <![CDATA[<!DOCTYPE catalog plist "dtd">]]>
 <!--         ^ string.unquoted.cdata -->
 
+    <таĝñäᴹə ατţř="șƬűʃ⨍">Contents</таĝñäᴹə>
+<!-- ^ meta.tag entity.name.tag.localname  -->
+<!--         ^ meta.tag entity.other.attribute-name.localname -->
 
 <!--
   Entities
@@ -92,6 +133,15 @@
      &
 <!-- ^ invalid.illegal.bad-ampersand -->
 
+     <1tag></-tag>
+<!--  ^^^^ invalid.illegal - entity.name.tag -->
+<!--         ^^^^ invalid.illegal - entity.name.tag -->
+
+     <
+<!-- ^ invalid.illegal.missing-entity -->
+
+     >
+<!-- ^ invalid.illegal.missing-entity -->
 
      </ns:tagname>
 <!-- ^ meta.tag -->
@@ -100,3 +150,12 @@
 <!--     ^ punctuation.separator.namespace -->
 <!--      ^^^^^^^ entity.name.tag.localname -->
 <!--             ^ punctuation.definition.tag.end -->
+
+     <element attr_with.space = "value" />
+<!--                  ^^^ entity.other.attribute-name.localname -->
+<!--                          ^ punctuation.separator.key-value -->
+<!--                            ^ punctuation.definition.string.begin -->
+<!--                             ^^^^^ string.quoted -->
+     <test
+foo="bar" />
+<!-- <- entity.other.attribute-name.localname -->

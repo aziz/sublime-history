@@ -49,14 +49,13 @@ contexts:
         - include: regexp
     - include: escape
     - include: variable
+    - include: braces
     - match: '"'
-      captures:
-        0: punctuation.definition.string.begin.tcl
+      scope: punctuation.definition.string.begin.tcl
       push:
         - meta_scope: string.quoted.double.tcl
         - match: '"'
-          captures:
-            0: punctuation.definition.string.end.tcl
+          scope: punctuation.definition.string.end.tcl
           pop: true
         - include: escape
         - include: variable
@@ -75,6 +74,7 @@ contexts:
     - match: '(?:^|(?<=\s))\{'
       comment: matches a single brace-enclosed word
       push:
+        - meta_scope: string.quoted.curly.tcl
         - match: '\}([^\s\]]*)'
           captures:
             1: invalid.illegal.tcl
@@ -84,13 +84,11 @@ contexts:
         - include: inner-braces
   embedded:
     - match: '\['
-      captures:
-        0: punctuation.section.embedded.begin.tcl
+      scope: punctuation.section.embedded.begin.tcl
       push:
         - meta_scope: source.tcl.embedded
         - match: '\]'
-          captures:
-            0: punctuation.section.embedded.end.tcl
+          scope: punctuation.section.embedded.end.tcl
           pop: true
         - include: scope:source.tcl
   escape:

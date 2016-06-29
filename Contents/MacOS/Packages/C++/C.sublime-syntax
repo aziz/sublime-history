@@ -106,7 +106,7 @@ contexts:
           ((-?\d+)|\*(-?\d+\$)?)?              # minimum field width
           (\.((-?\d+)|\*(-?\d+\$)?)?)?         # precision
           (hh|h|ll|l|j|t|z|q|L|vh|vl|v|hv|hl)? # length modifier
-          [diouxXDOUeEfFgGaACcSspn%]           # conversion type
+          ([am]s|[diouxXDOUeEfFgGaACcSspn%])   # conversion type
       scope: constant.other.placeholder.c
     - match: "%"
       scope: invalid.illegal.placeholder.c
@@ -215,11 +215,11 @@ contexts:
       captures:
         1: invalid.illegal.space-after-continuation.c
 
-  preprecessor-line-ending:
+  preprocessor-line-ending:
     - match: $\n
       pop: true
 
-  # Comment handling in preprecessor directives are complicated by the fact
+  # Comment handling in preprocessor directives are complicated by the fact
   # that a single-line comment will normally consume the newline to prevent
   # completions from being presented to the user. Additionally, a multi-line
   # comment without a line continuation ends at the newline.
@@ -289,6 +289,7 @@ contexts:
     - include: operators
     - include: strings
     - include: parens
+    - include: brackets
     - include: block
     - include: variables
     - include: constants
@@ -302,6 +303,8 @@ contexts:
     - include: modifiers
     - include: types
     - include: function-call
+    - match: ';'
+      scope: punctuation.terminator.c
 
   ## C-specific contexts
 
@@ -316,7 +319,26 @@ contexts:
     - include: comments
     - match: \*
       scope: keyword.operator.c
-    - match: '(?=\b({{before_tag}}|{{control_keywords}})\b)'
+    # If a struct/union/enum followed by a name that is not a macro or declspec
+    # then this is likely a return type of a function. This is uncommon.
+    - match: |-
+        (?x:
+          ({{before_tag}})
+          \s+
+          (?=
+            (?![[:upper:][:digit:]_]+\b|__declspec)
+            {{identifier}}
+            (\s+{{identifier}}|\s*\*+)
+          )
+        )
+      captures:
+        1: storage.type.c
+      set: global-maybe-function
+    # The previous match handles return types of struct/enum/etc from a func,
+    # there this one exits the context to allow matching an actual struct/union
+    - match: '(?=\b({{before_tag}})\b)'
+      set: data-structures
+    - match: '(?=\b({{control_keywords}})\b)'
       pop: true
     - match: '(?=\s)'
       set: global-maybe-function
@@ -324,11 +346,12 @@ contexts:
     - match: '({{identifier}})\s*(\()(?=[^\)]+\))'
       captures:
         1: variable.function.c
-        2: punctuation.definition.parameters.c
+        2: meta.group.c punctuation.definition.group.begin.c
       push:
         - meta_scope: meta.function-call.c
+        - meta_content_scope: meta.group.c
         - match: '\)'
-          scope: punctuation.definition.parameters.c
+          scope: meta.group.c punctuation.definition.group.end.c
           pop: true
         - include: expressions
     - match: (?={{identifier}}\s*\()
@@ -353,7 +376,7 @@ contexts:
     - match: '{{identifier}}(?!\s*(\(|$))(?=\s+)'
     # Real function definition
     - match: '{{identifier}}(?=\s*(\(|$))'
-      scope: entity.name.function.c
+      scope: meta.function.c entity.name.function.c
       set: function-definition-params
     - match: '(?=\S)'
       pop: true
@@ -361,19 +384,25 @@ contexts:
   function-definition-params:
     - meta_content_scope: meta.function.c
     - include: comments
-    - match: \(
-      scope: punctuation.definition.parameters.c
+    - match: '(?=\()'
       set:
-        - match : \)
-          scope: punctuation.definition.parameters.c
-          set: function-definition-continue
-        - include: expressions
+        - match: \(
+          scope: meta.function.parameters.c meta.group.c punctuation.definition.group.begin.c
+          set:
+            - meta_content_scope: meta.function.parameters.c meta.group.c
+            - match : \)
+              scope: punctuation.definition.group.end.c
+              set: function-definition-continue
+            - match: '{{identifier}}(?=\s*(,|\)))'
+              scope: variable.parameter.c
+            - include: expressions
     - match: (?=\S)
       pop: true
 
   function-definition-continue:
     - meta_content_scope: meta.function.c
-    - match: ';'
+    - include: comments
+    - match: '(?=;)'
       pop: true
     - match: \b(const|final|noexcept|override)\b
       scope: storage.modifier.c
@@ -385,35 +414,132 @@ contexts:
   function-definition-body:
     - meta_content_scope: meta.function.c
     - match: '\{'
-      scope: meta.block.c punctuation.definition.block.c
+      scope: meta.block.c punctuation.definition.block.begin.c
       set:
         - meta_content_scope: meta.function.c meta.block.c
         - match: '\}'
-          scope: meta.function.c meta.block.c punctuation.definition.block.c
+          scope: meta.function.c meta.block.c punctuation.definition.block.end.c
           pop: true
         - match: (?=^\s*#\s*(elif|else|endif)\b)
           pop: true
+        - match: '(?=({{before_tag}})([^(;]+$|.*\{))'
+          push: data-structures
         - include: statements
+
+  data-structures:
+    - match: '\bstruct\b'
+      scope: storage.type.c
+      set: data-structures-struct-definition
+    - match: '\benum\b'
+      scope: storage.type.c
+      set: data-structures-enum-definition
+    - match: '\bunion\b'
+      scope: storage.type.c
+      set: data-structures-union-definition
+    - match: '(?=\S)'
+      pop: true
+
+  data-structures-struct-definition:
+    - meta_scope: meta.struct.c
+    - include: data-structures-definition-common-begin
+    - match: '{{identifier}}(?=\s*;)'
+      scope: entity.name.struct.forward-decl.c
+    - match: '{{identifier}}'
+      scope: entity.name.struct.c
+    - match: '(?=;)'
+      pop: true
+    - match: '\{'
+      scope: meta.block.c punctuation.definition.block.begin.c
+      set:
+        - meta_content_scope: meta.struct.c meta.block.c
+        - match: '\}'
+          scope: meta.struct.c meta.block.c punctuation.definition.block.end.c
+          pop: true
+        - include: data-structures-body
+
+  data-structures-enum-definition:
+    - meta_scope: meta.enum.c
+    - include: data-structures-definition-common-begin
+    - match: '{{identifier}}(?=\s*;)'
+      scope: entity.name.enum.forward-decl.c
+    - match: '{{identifier}}'
+      scope: entity.name.enum.c
+    - match: '(?=;)'
+      pop: true
+    - match: '\{'
+      scope: meta.block.c punctuation.definition.block.begin.c
+      set:
+        - meta_content_scope: meta.enum.c meta.block.c
+        # Enums don't support methods so we have a simplified body
+        - match: '\}'
+          scope: meta.enum.c meta.block.c punctuation.definition.block.end.c
+          pop: true
+        - include: data-structures-body
+
+  data-structures-union-definition:
+    - meta_scope: meta.union.c
+    - include: data-structures-definition-common-begin
+    - match: '{{identifier}}(?=\s*;)'
+      scope: entity.name.union.forward-decl.c
+    - match: '{{identifier}}'
+      scope: entity.name.union.c
+    - match: '(?=;)'
+      pop: true
+    - match: '\{'
+      scope: meta.block.c punctuation.definition.block.begin.c
+      set:
+        - meta_content_scope: meta.union.c meta.block.c
+        - match: '\}'
+          scope: meta.union.c meta.block.c punctuation.definition.block.end.c
+          pop: true
+        - include: data-structures-body
+
+  data-structures-definition-common-begin:
+    - include: comments
+    - include: modifiers-parens
+    - include: modifiers
+    # Handle macros so they aren't matched as the class name
+    - match: '\b[[:upper:][:digit:]_]+\b'
+
+  data-structures-definition-common-end:
+    - match: '(?=;)'
+      pop: true
+
+  data-structures-body:
+    - include: preprocessor-data-structures
+    - match: '(?={{before_tag}})'
+      push: data-structures
+    - include: expressions
 
   block:
     - match: '\{'
-      scope: punctuation.definition.block.c
+      scope: punctuation.definition.block.begin.c
       push:
         - meta_scope: meta.block.c
         - match: (?=^\s*#\s*(elif|else|endif)\b)
           pop: true
         - match: '\}'
-          scope: punctuation.definition.block.c
+          scope: punctuation.definition.block.end.c
           pop: true
         - include: statements
 
   parens:
     - match: \(
-      scope: punctuation.definition.parameters.c
+      scope: punctuation.definition.group.begin.c
       push:
-        - meta_scope: meta.parens.c
+        - meta_scope: meta.group.c
         - match: \)
-          scope: punctuation.definition.parameters.c
+          scope: punctuation.definition.group.end.c
+          pop: true
+        - include: expressions
+
+  brackets:
+    - match: \[
+      scope: punctuation.definition.brackets.begin.c
+      push:
+        - meta_scope: meta.brackets.c
+        - match: \]
+          scope: punctuation.definition.brackets.end.c
           pop: true
         - include: expressions
 
@@ -430,29 +556,32 @@ contexts:
     - match: \b(__attribute__)\s*(\(\()
       captures:
         1: storage.modifier.c
-        2: punctuation.definition.parameters.c
+        2: meta.group.c punctuation.definition.group.begin.c
       push :
         - meta_scope: meta.attribute.c
+        - meta_content_scope: meta.group.c
         - include: parens
         - include: strings
         - match: \)\)
-          scope: punctuation.definition.parameters.c
+          scope: meta.group.c punctuation.definition.group.end.c
           pop: true
     - match: \b(__declspec)(\()
       captures:
         1: storage.modifier.c
-        2: punctuation.definition.parameters.c
+        2: meta.group.c punctuation.definition.group.begin.c
       push:
+        - meta_content_scope: meta.group.c
         - match: '\)'
-          scope: punctuation.definition.parameters.c
+          scope: meta.group.c punctuation.definition.group.end.c
           pop: true
         - match: '\b(align|allocate|code_seg|property|uuid)\b\s*(\()'
           captures:
             1: storage.modifier.c
-            2: punctuation.definition.parameters.c
+            2: meta.group.c punctuation.definition.group.begin.c
           push:
+            - meta_content_scope: meta.group.c
             - match: '\)'
-              scope: punctuation.definition.parameters.c
+              scope: meta.group.c punctuation.definition.group.end.c
               pop: true
             - include: numbers
             - include: strings
@@ -469,10 +598,11 @@ contexts:
     - match: '\b(sizeof)\b\s*(\()'
       captures:
         1: keyword.operator.word.c
-        2: punctuation.definition.parameters.c
+        2: meta.group.c punctuation.definition.group.begin.c
       push:
+        - meta_content_scope: meta.group.c
         - match: '\)'
-          scope: punctuation.definition.parameters.c
+          scope: meta.group.c punctuation.definition.group.end.c
           pop: true
         - include: expressions
 
@@ -480,14 +610,13 @@ contexts:
     - match: \btypedef\b
       scope: storage.type.c
       push:
-        - match: ({{identifier}})?\s*;
+        - match: ({{identifier}})?\s*(?=;)
           captures:
             1: entity.name.type.typedef.c
           pop: true
         - match: \b(struct)\s+({{identifier}})
           captures:
             1: storage.type.c
-            2: entity.name.type.struct.c
         - include: expressions
 
   function-call:
@@ -498,13 +627,71 @@ contexts:
         - match: '{{identifier}}'
           scope: variable.function.c
         - match: '\('
-          scope: punctuation.definition.parameters.c
+          scope: meta.group.c punctuation.definition.group.begin.c
           set:
-            - meta_content_scope: meta.function-call.c
+            - meta_content_scope: meta.function-call.c meta.group.c
             - match : \)
-              scope: meta.function-call.c punctuation.definition.parameters.c
+              scope: meta.function-call.c meta.group.c punctuation.definition.group.end.c
               pop: true
             - include: expressions
+
+  ## Preprocessor for data-structures
+
+  preprocessor-data-structures:
+    - include: preprocessor-rule-enabled-data-structures
+    - include: preprocessor-rule-disabled-data-structures
+
+  preprocessor-rule-disabled-data-structures:
+    - match: ^\s*((#if)\s+(0))\b
+      captures:
+        1: meta.preprocessor.c
+        2: keyword.control.import.c
+        3: constant.numeric.preprocessor.c
+      push:
+        - match: ^\s*(#\s*endif)\b
+          captures:
+            1: meta.preprocessor.c keyword.control.import.c
+          pop: true
+        - match: ^\s*(#\s*else)\b
+          captures:
+            1: meta.preprocessor.c keyword.control.import.else.c
+          push:
+            - match: (?=^\s*#\s*endif\b)
+              pop: true
+            - include: negated-block
+            - include: data-structures-body
+        - match: ""
+          push:
+            - meta_scope: comment.block.preprocessor.if-branch.c
+            - match: (?=^\s*#\s*(else|endif)\b)
+              pop: true
+            - include: preprocessor-disabled
+
+  preprocessor-rule-enabled-data-structures:
+    - match: ^\s*((#if)\s+(0*1))\b
+      captures:
+        1: meta.preprocessor.c
+        2: keyword.control.import.c
+        3: constant.numeric.preprocessor.c
+      push:
+        - match: ^\s*(#\s*endif)\b
+          captures:
+            1: meta.preprocessor.c keyword.control.import.c
+          pop: true
+        - match: ^\s*(#\s*else)\b
+          captures:
+            1: meta.preprocessor.c keyword.control.import.else.c
+          push:
+            - meta_content_scope: comment.block.preprocessor.else-branch.c
+            - match: (?=^\s*#\s*endif\b)
+              pop: true
+            - include: preprocessor-disabled
+        - match: ""
+          push:
+            - match: (?=^\s*#\s*(else|endif)\b)
+              pop: true
+            - include: negated-block
+            - include: data-structures-body
 
   ## Preprocessor for global
 
@@ -541,6 +728,7 @@ contexts:
           push:
             - match: (?=^\s*#\s*endif\b)
               pop: true
+            - include: preprocessor-global
             - include: negated-block
             - include: global
         - match: ""
@@ -573,6 +761,7 @@ contexts:
           push:
             - match: (?=^\s*#\s*(else|endif)\b)
               pop: true
+            - include: preprocessor-global
             - include: negated-block
             - include: global
 
@@ -605,8 +794,9 @@ contexts:
     - match: (?=^\s*#\s*(elif|else)\b)
       push: preprocessor-elif-else-branch-global
     - match: \{
-      scope: punctuation.definition.block.c
+      scope: punctuation.definition.block.begin.c
       set: preprocessor-block-if-branch-global
+    - include: preprocessor-global
     - include: negated-block
     - include: global
 
@@ -619,9 +809,9 @@ contexts:
     - match: (?=^\s*#\s*(elif|else)\b)
       push: preprocessor-elif-else-branch-global
     - match: \}
-      scope: punctuation.definition.block.c
+      scope: punctuation.definition.block.end.c
       set: preprocessor-if-branch-global
-    - include: global
+    - include: statements
 
   preprocessor-block-finish-global:
     - meta_scope: meta.block.c
@@ -630,7 +820,7 @@ contexts:
         1: meta.preprocessor.c keyword.control.import.c
       set: preprocessor-block-finish-if-branch-global
     - match: \}
-      scope: punctuation.definition.block.c
+      scope: punctuation.definition.block.end.c
       pop: true
     - include: statements
 
@@ -640,7 +830,7 @@ contexts:
         1: meta.preprocessor.c keyword.control.import.c
       pop: true
     - match: \}
-      scope: punctuation.definition.block.c
+      scope: punctuation.definition.block.end.c
       set: preprocessor-if-branch-global
     - include: statements
 
@@ -648,6 +838,7 @@ contexts:
     - match: (?=^\s*#\s*endif\b)
       pop: true
     - include: negated-block
+    - include: preprocessor-global
     - include: global
 
   ## Preprocessor for statements
@@ -733,7 +924,7 @@ contexts:
     - match: (?=^\s*#\s*(elif|else)\b)
       push: preprocessor-elif-else-branch-statements
     - match: \{
-      scope: punctuation.definition.block.c
+      scope: punctuation.definition.block.begin.c
       set: preprocessor-block-if-branch-statements
     - include: negated-block
     - include: statements
@@ -747,7 +938,7 @@ contexts:
     - match: (?=^\s*#\s*(elif|else)\b)
       push: preprocessor-elif-else-branch-statements
     - match: \}
-      scope: punctuation.definition.block.c
+      scope: punctuation.definition.block.end.c
       set: preprocessor-if-branch-statements
     - include: statements
 
@@ -758,7 +949,7 @@ contexts:
         1: meta.preprocessor.c keyword.control.import.c
       set: preprocessor-block-finish-if-branch-statements
     - match: \}
-      scope: punctuation.definition.block.c
+      scope: punctuation.definition.block.end.c
       pop: true
     - include: statements
 
@@ -768,7 +959,7 @@ contexts:
         1: meta.preprocessor.c keyword.control.import.c
       pop: true
     - match: \}
-      scope: punctuation.definition.block.c
+      scope: punctuation.definition.block.end.c
       set: preprocessor-if-branch-statements
     - include: statements
 
@@ -782,10 +973,10 @@ contexts:
 
   negated-block:
     - match: '\}'
-      scope: punctuation.definition.block.c
+      scope: punctuation.definition.block.end.c
       push:
         - match: '\{'
-          scope: punctuation.definition.block.c
+          scope: punctuation.definition.block.begin.c
           pop: true
         - match: (?=^\s*#\s*(elif|else|endif)\b)
           pop: true
@@ -793,33 +984,38 @@ contexts:
 
   preprocessor-macro-define:
     - match: ^\s*(#\s*define)\b
-      scope: keyword.control.import.define.c
+      captures:
+        1: meta.preprocessor.macro.c keyword.control.import.define.c
       push:
-        - meta_scope: meta.preprocessor.macro.c
+        - meta_content_scope: meta.preprocessor.macro.c
         - include: preprocessor-line-continuation
-        - include: preprecessor-line-ending
-        - match: '({{identifier}})(\()'
-          captures:
-            1: entity.name.function.preprocessor.c
-            2: punctuation.definition.parameters.c
-          set: [preprocessor-macro-definition, preprocessor-macro-params]
+        - include: preprocessor-line-ending
+        - include: preprocessor-comments
+        - match: '({{identifier}})(?=\()'
+          scope: entity.name.function.preprocessor.c
+          set:
+            - match: '\('
+              scope: punctuation.definition.group.begin.c
+              set: preprocessor-macro-params
         - match: '{{identifier}}'
           scope: entity.name.constant.preprocessor.c
           set: preprocessor-macro-definition
 
   preprocessor-macro-params:
-    - meta_scope: meta.preprocessor.params.macro.c
+    - meta_scope: meta.preprocessor.macro.parameters.c meta.group.c
     - match: '{{identifier}}'
       scope: variable.parameter.c
     - match: \)
-      scope: punctuation.definition.parameters.c
-      pop: true
+      scope: punctuation.definition.group.end.c
+      set: preprocessor-macro-definition
     - match: ','
+      scope: punctuation.separator.c
       push:
         - match: '{{identifier}}'
           scope: variable.parameter.c
           pop: true
         - include: preprocessor-line-continuation
+        - include: preprocessor-comments
         - match: '\.\.\.'
           scope: punctuation.definition.variadic.c
         - match: '(?=\))'
@@ -832,6 +1028,7 @@ contexts:
         - match: '\S+'
           scope: invalid.illegal.unexpected-character.c
     - include: preprocessor-line-continuation
+    - include: preprocessor-comments
     - match: '\.\.\.'
       scope: punctuation.definition.variadic.c
     - match: (/\*).*(\*/)
@@ -843,12 +1040,15 @@ contexts:
       scope: invalid.illegal.unexpected-end-of-line.c
 
   preprocessor-macro-definition:
-    - meta_scope: meta.preprocessor.macro.definition.c
+    - meta_content_scope: meta.preprocessor.macro.c
     - include: preprocessor-line-continuation
-    - include: preprecessor-line-ending
+    - include: preprocessor-line-ending
+    - include: preprocessor-comments
     # Don't define blocks in define statements
-    - match: '\{|\}'
-      scope: punctuation.definition.block.c
+    - match: '\{'
+      scope: punctuation.definition.block.begin.c
+    - match: '\}'
+      scope: punctuation.definition.block.end.c
     - include: expressions
 
   preprocessor-other:
@@ -858,7 +1058,7 @@ contexts:
       push:
         - meta_scope: meta.preprocessor.c
         - include: preprocessor-line-continuation
-        - include: preprecessor-line-ending
+        - include: preprocessor-line-ending
         - include: preprocessor-comments
         - match: \bdefined\b
           scope: keyword.control.c
@@ -871,7 +1071,7 @@ contexts:
       push:
         - meta_scope: meta.preprocessor.diagnostic.c
         - include: preprocessor-line-continuation
-        - include: preprecessor-line-ending
+        - include: preprocessor-line-ending
         - include: preprocessor-comments
         - include: strings
         - match: '\S+'
@@ -882,7 +1082,7 @@ contexts:
       push:
         - meta_scope: meta.preprocessor.include.c
         - include: preprocessor-line-continuation
-        - include: preprecessor-line-ending
+        - include: preprocessor-line-ending
         - include: preprocessor-comments
         - match: '"'
           scope: punctuation.definition.string.begin.c

@@ -1,6 +1,9 @@
 /* SYNTAX TEST "Packages/Objective-C/Objective-C.sublime-syntax" */
 
 #define EXTTS_BUFSIZE (PTP_BUF_TIMESTAMPS /* comment block */ * sizeof(struct ptp_extts_event)) // comment line
+/*^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.preprocessor.macro */
+/*                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.group */
+/*                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^ meta.group meta.group */
 /* <- keyword.control.import.define */
 /*      ^ entity.name.constant.preprocessor */
 /*                                        ^ comment.block */
@@ -13,18 +16,23 @@
 /*^^^^ meta.preprocessor */
 
 #define MY_MACRO(a, b)
+/*^^^^^^^^^^^^^^^^^^^^ meta.preprocessor.macro */
+/*              ^^^^^^ meta.preprocessor.macro.parameters */
 /*      ^^^^^^^^ entity.name.function.preprocessor */
-/*                   ^ punctuation.definition.parameters */
+/*                   ^ punctuation.definition.group.end */
 
 #define max(a, b, \
+/*^^^^^^^^^^^^^^^^^ meta.preprocessor.macro */ \
+/*         ^^^^^^^^ meta.preprocessor.macro.parameters */ \
 /* <- keyword.control.import.define */ \
 /*      ^ entity.name.function.preprocessor */ \
-/*         ^ meta.preprocessor.params */ \
+/*         ^ punctuation.definition.group.begin */ \
 /*          ^ variable.parameter */ \
 /* */ \
 /* <- comment.block */ \
  c)  ((a>b) ? (a>c?a:c) : (b>c?b:c))
- /* <- variable.parameter */
+ /* <- meta.preprocessor.macro meta.group variable.parameter */
+  /* <- meta.preprocessor.macro meta.group punctuation.definition.group.end */
  /*               ^ keyword.operator.ternary */
  /*                 ^ keyword.operator.ternary */
 
@@ -35,15 +43,36 @@
 int i;
 /* <- storage.type */
 
+// The following example ensures that comments at the end of preprocessor
+// directives don't mess with context transitions
+int func() {
+/*  ^^^^^^^^ meta.function */
+/*      ^^ meta.function.parameters */
+/*         ^ meta.block punctuation.definition.block.begin */
+/*  ^ entity.name.function */
+    #if( EXTAL == 40000 )       /* 40 MHz */
+/*^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.function meta.block */
+/*  ^ keyword.control.import */
+        #define PLL_RFD_PHI1    10      // PLL0_PH1 = 40MHz
+/*      ^ keyword.control.import */
+/*                              ^^ constant.numeric */
+/*                                      ^ comment.line */
+    #endif
+/*  ^ keyword.control.import */
+}
+/* <- meta.function meta.block punctuation.definition.block.end */
+ /* <- - meta.function meta.block */
+
 #define CONST0 16 // Comment
 #define CONST1 8
 /* <- keyword.control.import.define */
 /*      ^ entity.name.constant */
 
 #if defined(VARIABLE) | // comment_line \
-	defined(VAR2)
+/*^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.preprocessor */ \
+    defined(VAR2)
+/*^^^^^^^^^^^^^^^ meta.preprocessor */
 /*  ^ keyword.control */
-/*          ^ meta.preprocessor */
 # error This is a long error message that need to   \
 /* <- keyword.control.import */ \
 /*      ^ string.unquoted */ \
@@ -92,6 +121,20 @@ int disabled_func() {
 }
 #endif
 
+#if 1
+    int a = 1;
+    #if 0
+/*      ^ constant.numeric */
+        int b = 2;
+/*      ^ comment.block */
+    #else
+        int c = 3;
+    #endif
+#else
+    int d = 4;
+/*  ^ comment.block */
+#endif
+
 /////////////////////////////////////////////
 // Preprocessor branches starting blocks
 /////////////////////////////////////////////
@@ -107,15 +150,70 @@ if (4) {
 #endif
     int bar = 1;
 }
-/* <- meta.block punctuation.definition.block */
+/* <- meta.block punctuation.definition.block.end */
  /* <- - meta.block */
 
+/////////////////////////////////////////////
+// Typedefs
+/////////////////////////////////////////////
+
+typedef int myint;
+/* <- storage.type */
+/*          ^ entity.name.type */
+
+typedef struct mystruct {
+/* <- storage.type */
+/*             ^ - entity */
+} mystruct;
+/* ^ entity.name.type */
+
+/////////////////////////////////////////////
+// Data structures and return values
+/////////////////////////////////////////////
+
+struct point
+/* ^ storage.type */
+/*     ^ entity.name.struct */
+{
+    int x;
+    int y;
+}
+
+struct point2 {
+/* ^ storage.type */
+/*     ^ entity.name.struct */
+    int x;
+    int y;
+}
+
+struct point get_point() {}
+/*           ^^^^^^^^^^^^^^ meta.function */
+/*                    ^^ meta.function.parameters */
+/*                       ^^ meta.block */
+/*                       ^ punctuation.definition.block.begin
+/*                        ^ punctuation.definition.block.end
+/* ^ storage.type */
+/*     ^ - entity.name.struct */
+/*           ^ entity.name.function */
+
+struct foo **alloc_foo();
+/* ^ storage.type */
+/*     ^ - entity.name.struct */
+/*         ^^ keyword.operator */
+/*           ^ entity.name.function */
 
 /////////////////////////////////////////////
 // Test preprocessor branching and C blocks
 /////////////////////////////////////////////
 
-int foo(int val)
+int foo(int val, float val2)
+/*  ^^^^^^^^^^^^^^^^^^^^^^^^ meta.function */
+/*     ^^^^^^^^^^^^^^^^^^^^^ meta.function.parameters meta.group */
+/*     ^ punctuation.definition.group.begin */
+/*                         ^ punctuation.definition.group.end */
+/*          ^^^ variable.parameter */
+/*             ^ punctuation.separator */
+/*                     ^^^^ variable.parameter */
 {
 /* <- meta.function meta.block */
     myClass *result;
@@ -130,7 +228,7 @@ int foo(int val)
 #endif
  /* <- keyword.control.import */
     }
-/*  ^ meta.block meta.block punctuation.definition.block */
+/*  ^ meta.block meta.block punctuation.definition.block.end */
 /*   ^ - meta.block meta.block */
 
 #ifdef FOO
@@ -140,21 +238,21 @@ int foo(int val)
     ;
 
     if (val == -1) {
-/*                 ^ meta.block meta.block punctuation.definition.block */
+/*                 ^ meta.block meta.block punctuation.definition.block.begin */
 #else
  /* <- keyword.control.import */
     if (val == -2) {
-/*                 ^ meta.block meta.block punctuation.definition.block */
+/*                 ^ meta.block meta.block punctuation.definition.block.begin */
 #endif
  /* <- keyword.control.import */
         val += 1;
     }
-/*  ^ meta.block meta.block punctuation.definition.block */
+/*  ^ meta.block meta.block punctuation.definition.block.end */
 /*   ^ - meta.block meta.block */
 
     return -1;
 }
-/* <- meta.function punctuation.definition.block */
+/* <- meta.function punctuation.definition.block.end */
  /* <- - meta.function */
 
 
@@ -171,16 +269,21 @@ int /* comment */ * myfunc
 /* <- storage.type */
 /*  ^ comment.block */
 /*                ^ keyword.operator */
-/*                  ^^^^^^ entity.name.function */
+/*                  ^^^^^^ meta.function entity.name.function */
 (int * a)
-/* <- punctuation.definition.parameters */
+/*^^^^^^^ meta.function.parameters meta.group */
+/* <- punctuation.definition.group.begin */
 /*   ^ keyword.operator */
-/*      ^ punctuation.definition.parameters */
+/*     ^ variable.parameter */
+/*      ^ punctuation.definition.group.end */
 {
-
+/* <- meta.function meta.block punctuation.definition.block.begin */
 }
 
 MACRO1 void * MACRO2 myfuncname () {
+/*                   ^^^^^^^^^^^^^^^ meta.function */
+/*                              ^^ meta.function.parameters */
+/*                                 ^ meta.block punctuation.definition.block.begin
 /*     ^ storage.type */
 /*          ^ keyword.operator */
 /*                   ^ entity.name.function */
@@ -201,9 +304,22 @@ MACRO1 void * MACRO2 myfuncname () {
 /*             ^ punctuation.separator */
     }
 
+    struct Args {
+/*  ^ storage.type */
+/*         ^ entity.name.struct */
+        void* hello;
+        void* foobar;
+    };
+
+    struct Args args;
+/*  ^ storage.type */
+/*         ^ - entity */
+
 }
 
 static const uint32_t * const MACRO funcname();
+/*                                  ^^^^^^^^^^ meta.function */
+/*                                          ^^ meta.function.parameters */
 /* ^ storage.modifier */
 /*     ^ storage.modifier */
 /*           ^ support.type */
@@ -217,13 +333,17 @@ funcname2
 /* ^ entity.name.function */
 ()
 {
-
+    int a[5];
+/*       ^^^ meta.brackets */
+/*       ^ punctuation.definition.brackets.begin */
+/*         ^ punctuation.definition.brackets.end */
 }
 
 MACRO_CALL(int) macro_prefixed_func(){}
-/* ^ meta.function-call */
-/*        ^ punctuation.definition.parameters */
-/*            ^ punctuation.definition.parameters */
+/*^^^^^^^^^^^^^ meta.function-call */
+/*        ^^^^^ meta.group */
+/*        ^ punctuation.definition.group.begin */
+/*            ^ punctuation.definition.group.end */
 /*              ^ entity.name.function */
 
 int* return_type_pointer_no_space(){}
@@ -240,6 +360,8 @@ int32
 /////////////////////////////////////////////
 
 static string foo(bar() + ';');
+/*            ^^^^^^^^^^^^^^^^ meta.function */
+/*               ^^^^^^^^^^^^^ meta.function.parameters */
 /*            ^^^ entity.name.function */
 /*                ^^^^^ meta.function-call */
 /*                ^^^ variable.function */
@@ -247,8 +369,11 @@ static string foo(bar() + ';');
 /*                           ^ -string */
 
 func_call(foo
-/* <- meta.function-call */
+/*^^^^^^^^^^^ meta.function-call */
+/*       ^^^^ meta.group */
+/*       ^ punctuation.definition.group.begin */
 );
+/* <- meta.function-call meta.group punctuation.definition.group.end */
 
 /////////////////////////////////////////////
 // Invalid

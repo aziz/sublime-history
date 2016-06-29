@@ -638,7 +638,7 @@
 	{ "keys": ["ctrl+="], "command": "increase_font_size" },
 	{ "keys": ["ctrl+-"], "command": "decrease_font_size" },
 
-	{ "keys": ["alt+shift+w"], "command": "insert_snippet", "args": { "name": "Packages/XML/long-tag.sublime-snippet" } },
+	{ "keys": ["alt+shift+w"], "command": "insert_snippet", "args": { "name": "Packages/XML/Snippets/long-tag.sublime-snippet" } },
 
 	{ "keys": ["ctrl+shift+["], "command": "fold" },
 	{ "keys": ["ctrl+shift+]"], "command": "unfold" },

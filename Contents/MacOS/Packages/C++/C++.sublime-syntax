@@ -21,7 +21,8 @@ first_line_match: '-\*- C\+\+ -\*-'
 scope: source.c++
 variables:
   identifier: '\b[[:alpha:]_][[:alnum:]_]*\b'
-  path: '(?:::)?(?:{{identifier}}::)*{{identifier}}'
+  path_lookahead: '(::\s*)?({{identifier}}\s*::\s*)*{{identifier}}'
+  macro_identifier: '\b[[:upper:]_][[:upper:][:digit:]_]*\b'
   operator_method_name: '\boperator\s*(?:[-+*/%ˆ&|~!=<>]|[-+*/%^&|=!<>]=|<<=?|>>=?|&&|\|\||\+\+|--|,|->\*?|\(\)|\[\])'
   casts: 'const_cast|dynamic_cast|reinterpret_cast|static_cast'
   operator_keywords: 'and|and_eq|bitand|bitor|compl|not|not_eq|or|or_eq|xor|xor_eq|noexcept'
@@ -37,7 +38,8 @@ variables:
   other_keywords: 'typedef|decltype|nullptr|operator|{{visibility_modifiers}}|static_assert|sizeof|using|typeid|alignof|alignas|namespace|template'
   modifiers: '{{storage_classes}}|{{type_qualifier}}|{{compiler_directive}}'
   non_angle_brackets: '(?=<<|<=)'
-  generic_lookahead: '<\s*{{path}}(?:{{path}}|&(?!&)|\*|,|<.*?>|\s|\d)*>'
+  generic_lookahead: '<\s*{{path_lookahead}}(?:{{path_lookahead}}|&(?!&)|\*|,|<.*?>|\s|\d)*>'
+  data_structures_forward_decl_lookahead: '(\s+{{macro_identifier}})*\s*(:\s*({{path_lookahead}}|{{visibility_modifiers}}|,|\s|<[^;]*>)+)?;'
 
 contexts:
   main:
@@ -94,6 +96,8 @@ contexts:
   unique-types:
     - match: \b(char16_t|char32_t|wchar_t|nullptr_t)\b
       scope: storage.type.c++
+    - match: \bclass\b
+      scope: storage.type.c++
 
   unique-strings:
     - match: '((?:L|u8|u|U)?R)("([^\(\)\\ ]{0,16})\()'
@@ -141,10 +145,10 @@ contexts:
       scope: constant.numeric.c++
 
   identifiers:
-    - match: '{{identifier}}(::)'
+    - match: '{{identifier}}\s*(::)\s*'
       captures:
         1: punctuation.accessor.c++
-    - match: '(::)?{{identifier}}'
+    - match: '(?:(::)\s*)?{{identifier}}'
       captures:
         1: punctuation.accessor.c++
 
@@ -167,7 +171,7 @@ contexts:
           set: global-modifier
     - include: namespace
     - include: keywords-angle-brackets
-    - match: '(?={{path}}\s*<)'
+    - match: '(?={{path_lookahead}}\s*<)'
       push: global-modifier
     - include: early-expressions
     - match: ^\s*\b(extern)(?=\s+"C")
@@ -175,11 +179,19 @@ contexts:
       push:
         - include: strings
         - match: '\{'
-          scope: punctuation.definition.block.c++
+          scope: punctuation.definition.block.begin.c++
           set:
             - meta_scope: meta.extern-c.c++
+            - match: '^\s*(#\s*ifdef)\s*__cplusplus\s*'
+              scope: meta.preprocessor.c++
+              captures:
+                1: keyword.control.import.c++
+              set:
+                - match: '\}'
+                  scope: punctuation.definition.block.end.c++
+                  pop: true
             - match: '\}'
-              scope: punctuation.definition.block.c++
+              scope: punctuation.definition.block.end.c++
               pop: true
             - include: preprocessor-global
             - include: global
@@ -218,6 +230,7 @@ contexts:
     - include: operators
     - include: strings
     - include: parens
+    - include: brackets
     - include: block
     - include: variables
     - include: constants
@@ -233,12 +246,24 @@ contexts:
     - include: late-expressions
 
   late-expressions:
+    - include: late-expressions-before-function-call
+    - include: function-call
+    - include: identifiers
+    - match: ';'
+      scope: punctuation.terminator.c++
+
+  late-expressions-before-function-call:
     - include: unique-late-expressions
     - include: modifiers-parens
     - include: modifiers
     - include: types
-    - include: function-call
+
+  expressions-minus-function-call:
+    - include: early-expressions
+    - include: late-expressions-before-function-call
     - include: identifiers
+    - match: ';'
+      scope: punctuation.terminator.c++
 
   comments:
     - include: scope:source.c#comments
@@ -290,38 +315,42 @@ contexts:
     - match: '\b(alignas)\b\s*(\()'
       captures:
         1: storage.modifier.c++
-        2: punctuation.definition.parameters.c++
+        2: meta.group.c++ punctuation.definition.group.begin.c++
       push:
+        - meta_content_scope: meta.group.c++
         - match: '\)'
-          scope: punctuation.definition.parameters.c++
+          scope: meta.group.c++ punctuation.definition.group.end.c++
           pop: true
         - include: expressions
     - match: \b(__attribute__)\s*(\(\()
       captures:
         1: storage.modifier.c++
-        2: punctuation.definition.parameters.c++
+        2: meta.group.c++ punctuation.definition.group.begin.c++
       push :
         - meta_scope: meta.attribute.c++
+        - meta_content_scope: meta.group.c++
         - include: parens
         - include: strings
         - match: \)\)
-          scope: punctuation.definition.parameters.c++
+          scope: meta.group.c++ punctuation.definition.group.end.c++
           pop: true
     - match: \b(__declspec)(\()
       captures:
         1: storage.modifier.c++
-        2: punctuation.definition.parameters.c++
+        2: meta.group.c++ punctuation.definition.group.begin.c++
       push:
+        - meta_content_scope: meta.group.c++
         - match: '\)'
-          scope: punctuation.definition.parameters.c++
+          scope: meta.group.c++ punctuation.definition.group.end.c++
           pop: true
         - match: '\b(align|allocate|code_seg|property|uuid)\b\s*(\()'
           captures:
             1: storage.modifier.c++
-            2: punctuation.definition.parameters.c++
+            2: meta.group.c++ punctuation.definition.group.begin.c++
           push:
+            - meta_content_scope: meta.group.c++
             - match: '\)'
-              scope: punctuation.definition.parameters.c++
+              scope: meta.group.c++ punctuation.definition.group.end.c++
               pop: true
             - include: numbers
             - include: strings
@@ -338,10 +367,11 @@ contexts:
     - match: '\b(decltype)\b\s*(\()'
       captures:
         1: storage.type.c++
-        2: punctuation.definition.parameters.c++
+        2: meta.group.c++ punctuation.definition.group.begin.c++
       push:
+        - meta_content_scope: meta.group.c++
         - match: '\)'
-          scope: punctuation.definition.parameters.c++
+          scope: meta.group.c++ punctuation.definition.group.end.c++
           pop: true
         - include: expressions
 
@@ -363,57 +393,69 @@ contexts:
     - match: '\b(alignof|typeid)\b\s*(\()'
       captures:
         1: keyword.operator.word.c++
-        2: punctuation.definition.parameters.c++
+        2: meta.group.c++ punctuation.definition.group.begin.c++
       push:
+        - meta_content_scope: meta.group.c++
         - match: '\)'
-          scope: punctuation.definition.parameters.c++
+          scope: meta.group.c++ punctuation.definition.group.end.c++
           pop: true
         - include: expressions
     - match: '\b(static_assert)\b\s*(\()'
       captures:
         1: keyword.operator.word.c++
-        2: punctuation.definition.parameters.c++
+        2: meta.group.c++ punctuation.definition.group.begin.c++
       push:
+        - meta_content_scope: meta.group.c++
         - match: '\)'
-          scope: punctuation.definition.parameters.c++
+          scope: meta.group.c++ punctuation.definition.group.end.c++
           pop: true
         - include: expressions
     - match: '\b(sizeof)\b\s*(\()'
       captures:
         1: keyword.operator.word.c++
-        2: punctuation.definition.parameters.c++
+        2: meta.group.c++ punctuation.definition.group.begin.c++
       push:
+        - meta_content_scope: meta.group.c++
         - match: '\)'
-          scope: punctuation.definition.parameters.c++
+          scope: meta.group.c++ punctuation.definition.group.end.c++
           pop: true
         - include: expressions
 
   namespace:
-    - match: '\b(using)\s+(namespace)\s+({{path}})'
+    - match: '\b(using)\s+(namespace)\s+(?={{path_lookahead}})'
       captures:
         1: keyword.control.c++
         2: keyword.control.c++
-    - match: '\b(namespace)\s+({{path}})?(?!\s*(;|,))'
+      push:
+        - include: identifiers
+        - match: ''
+          pop: true
+    - match: '\b(namespace)\s+(?={{path_lookahead}}(?!\s*[;,]))'
+      scope: meta.namespace.c++
       captures:
         1: keyword.control.c++
-        2: entity.name.namespace.c++
       push:
-        - meta_scope: meta.namespace-block.c++
-        - include: comments
-        - match: =
-          scope: keyword.operator.alias.c++
-        - match: ';'
-          pop: true
-        - match: '\}'
-          scope: punctuation.definition.block.c++
-          pop: true
-        - match: '\{'
-          scope: punctuation.definition.block.c++
-          push:
-            - match: '(?=\})'
+        - meta_content_scope: meta.namespace.c++ entity.name.namespace.c++
+        - include: identifiers
+        - match: ''
+          set:
+            - meta_scope: meta.namespace.c++
+            - include: comments
+            - match: '='
+              scope: keyword.operator.alias.c++
+            - match: '(?=;)'
               pop: true
-            - include: preprocessor-global
-            - include: global
+            - match: '\}'
+              scope: meta.block.c++ punctuation.definition.block.end.c++
+              pop: true
+            - match: '\{'
+              scope: punctuation.definition.block.begin.c++
+              push:
+                - meta_scope: meta.block.c++
+                - match: '(?=\})'
+                  pop: true
+                - include: preprocessor-global
+                - include: global
 
   template:
     - match: \b(template)\b\s*(<)
@@ -437,6 +479,7 @@ contexts:
         - include: types
         - include: modifiers-parens
         - include: modifiers
+        - include: angle-brackets
         - include: scope:source.c#types
         - match: ','
           scope: punctuation.separator.c++
@@ -457,28 +500,29 @@ contexts:
         - include: expressions
 
   generic-type:
-    - match: '(?=(?!template){{path}}\s*{{generic_lookahead}}\s*\()'
+    - match: '(?=(?!template){{path_lookahead}}\s*{{generic_lookahead}}\s*\()'
       push:
         - meta_scope: meta.function-call.c++
-        - match: '(::)?{{identifier}}(::)'
+        - match: '(?:(::)\s*)?{{identifier}}\s*(::)\s*'
           scope: variable.function.c++
           captures:
             1: punctuation.accessor.c++
             2: punctuation.accessor.c++
-        - match: '(::)?{{identifier}}'
+        - match: '(?:(::)\s*)?{{identifier}}'
           scope: variable.function.c++
           captures:
             1: punctuation.accessor.c++
         - include: angle-brackets
         - match: '\('
-          scope: punctuation.definition.parameters.c++
+          scope: meta.group.c++ punctuation.definition.group.begin.c++
           set:
             - meta_scope: meta.function-call.c++
+            - meta_content_scope: meta.group.c++
             - match: '\)'
-              scope: punctuation.definition.parameters.c++
+              scope: meta.group.c++ punctuation.definition.group.end.c++
               pop: true
             - include: expressions
-    - match: '(?=(?!template){{path}}\s*{{generic_lookahead}})'
+    - match: '(?=(?!template){{path_lookahead}}\s*{{generic_lookahead}})'
       push:
         - include: identifiers
         - match: '<'
@@ -500,36 +544,36 @@ contexts:
 
   block:
     - match: '\{'
-      scope: punctuation.definition.block.c++
+      scope: punctuation.definition.block.begin.c++
       push:
         - meta_scope: meta.block.c++
         - match: (?=^\s*#\s*(elif|else|endif)\b)
           pop: true
         - match: '\}'
-          scope: punctuation.definition.block.c++
+          scope: punctuation.definition.block.end.c++
           pop: true
         - include: statements
 
   function-call:
-    - match: (?={{path}}\s*\()
+    - match: (?={{path_lookahead}}\s*\()
       push:
         - meta_scope: meta.function-call.c++
         - include: scope:source.c#c99
-        - match: '(::)?{{identifier}}(::)'
+        - match: '(?:(::)\s*)?{{identifier}}\s*(::)\s*'
           scope: variable.function.c++
           captures:
             1: punctuation.accessor.c++
             2: punctuation.accessor.c++
-        - match: '(::)?{{identifier}}'
+        - match: '(?:(::)\s*)?{{identifier}}'
           scope: variable.function.c++
           captures:
             1: punctuation.accessor.c++
         - match: '\('
-          scope: punctuation.definition.parameters.c++
+          scope: meta.group.c++ punctuation.definition.group.begin.c++
           set:
-            - meta_scope: meta.function-call.c++
+            - meta_content_scope: meta.function-call.c++ meta.group.c++
             - match: '\)'
-              scope: punctuation.definition.parameters.c++
+              scope: meta.function-call.c++ meta.group.c++ punctuation.definition.group.end.c++
               pop: true
             - include: expressions
 
@@ -542,11 +586,11 @@ contexts:
       push:
         - meta_content_scope: meta.method-call.c++
         - match: '\('
-          scope: punctuation.definition.parameters.c++
+          scope: meta.group.c++ punctuation.definition.group.begin.c++
           set:
-            - meta_content_scope: meta.method-call.c++
+            - meta_content_scope: meta.method-call.c++ meta.group.c++
             - match: '\)'
-              scope: meta.method-call.c++ punctuation.definition.parameters.c++
+              scope: meta.method-call.c++ meta.group.c++ punctuation.definition.group.end.c++
               pop: true
             - include: expressions
     - match: '(\.|->)({{identifier}})(?!\s*\()'
@@ -558,7 +602,7 @@ contexts:
     - match: \btypedef\b
       scope: storage.type.c++
       push:
-        - match: ({{identifier}})?\s*;
+        - match: ({{identifier}})?\s*(?=;)
           captures:
             1: entity.name.type.typedef.c++
           pop: true
@@ -569,11 +613,21 @@ contexts:
 
   parens:
     - match: \(
-      scope: punctuation.definition.parameters.c++
+      scope: punctuation.definition.group.begin.c++
       push:
-        - meta_scope: meta.parens.c++
+        - meta_scope: meta.group.c++
         - match: \)
-          scope: punctuation.definition.parameters.c++
+          scope: punctuation.definition.group.end.c++
+          pop: true
+        - include: expressions
+
+  brackets:
+    - match: \[
+      scope: punctuation.definition.brackets.begin.c++
+      push:
+        - meta_scope: meta.brackets.c++
+        - match: \]
+          scope: punctuation.definition.brackets.end.c++
           pop: true
         - include: expressions
 
@@ -593,11 +647,11 @@ contexts:
 
   function-trailing-return-type-parens:
     - match: \(
-      scope: punctuation.definition.parameters.c++
+      scope: punctuation.definition.group.begin.c++
       push:
-        - meta_scope: meta.parens.c++
+        - meta_scope: meta.group.c++
         - match: \)
-          scope: punctuation.definition.parameters.c++
+          scope: punctuation.definition.group.end.c++
           pop: true
         - include: function-trailing-return-type
 
@@ -608,19 +662,19 @@ contexts:
     - include: modifiers-parens
     - include: modifiers
     # Constructors and destructors don't have a type
-    - match: '(?={{path}}::{{identifier}}\s*(\(|$))'
+    - match: '(?={{path_lookahead}}\s*::\s*{{identifier}}\s*(\(|$))'
       set:
-        - meta_content_scope: entity.name.function.constructor.c++
+        - meta_content_scope: meta.function.c++ entity.name.function.constructor.c++
         - include: identifiers
         - match: '~{{identifier}}'
-        - match: '(?=\W)'
+        - match: '(?=[^\w\s])'
           set: function-definition-params
-    - match: '(?={{path}}::~{{identifier}}\s*(\(|$))'
+    - match: '(?={{path_lookahead}}\s*::\s*~{{identifier}}\s*(\(|$))'
       set:
-        - meta_content_scope: entity.name.function.destructor.c++
+        - meta_content_scope: meta.function.c++ entity.name.function.destructor.c++
         - include: identifiers
         - match: '~{{identifier}}'
-        - match: '(?=\W)'
+        - match: '(?=[^\w\s])'
           set: function-definition-params
     - match: '(?=\S)'
       set: global-type
@@ -641,15 +695,16 @@ contexts:
           \s+
           (?=
             (?![[:upper:][:digit:]_]+\b|__declspec|{{before_tag}})
-            {{path}}
-            \s*
-            [*&]?
-            \s+{{identifier}}
+            {{path_lookahead}}
+            (\s+{{identifier}}\s*\(|\s*[*&])
           )
         )
       captures:
         1: storage.type.c++
-      set: global-maybe-function
+      set:
+        - include: identifiers
+        - match: ''
+          set: global-maybe-function
     # The previous match handles return types of struct/enum/etc from a func,
     # there this one exits the context to allow matching an actual struct/class
     - match: '(?=\b({{before_tag}})\b)'
@@ -664,14 +719,15 @@ contexts:
     - match: '({{identifier}})\s*(\()(?=[^\)]+\))'
       captures:
         1: variable.function.c++
-        2: punctuation.definition.parameters.c++
+        2: meta.group.c++ punctuation.definition.group.begin.c++
       push:
         - meta_scope: meta.function-call.c++
+        - meta_content_scope: meta.group.c++
         - match: '\)'
-          scope: punctuation.definition.parameters.c++
+          scope: meta.group.c++ punctuation.definition.group.end.c++
           pop: true
         - include: expressions
-    - match: '(?={{path}}\s*\()'
+    - match: '(?={{path_lookahead}}\s*\()'
       set:
         - include: function-call
         - match: ''
@@ -687,7 +743,7 @@ contexts:
     # Consume pointer info, macros and any type info that was offset by macros
     - match: \*|&
       scope: keyword.operator.c++
-    - match: '{{type_qualifier}}'
+    - match: '\b({{type_qualifier}})\b'
       scope: storage.modifier.c++
     - match: '{{non_angle_brackets}}'
       pop: true
@@ -696,23 +752,47 @@ contexts:
     - include: modifiers-parens
     - include: modifiers
     # Operator overloading
-    - match: '({{path}}::)?{{operator_method_name}}(?=\s*(\(|$))'
-      scope: entity.name.function.c++
-      set: function-definition-params
+    - match: '(?=({{path_lookahead}}\s*::\s*)?{{operator_method_name}}\s*(\(|$))'
+      set:
+        - meta_content_scope: meta.function.c++ entity.name.function.c++
+        - include: identifiers
+        - match: '(?=\s*(\(|$))'
+          set: function-definition-params
     # Identifier that is not the function name - likely a macro or type
-    - match: '(?={{path}}([ \t]+|[*&])(?!\s*(\(|$)))'
+    - match: '(?={{path_lookahead}}([ \t]+|[*&])(?!\s*(<|::|\(|$)))'
       push:
         - include: identifiers
         - match: ''
           pop: true
     # Real function definition
-    - match: '(?={{path}}\s*(\(|$))'
+    - match: '(?={{path_lookahead}}({{generic_lookahead}}({{path_lookahead}})?)\s*(\(|$))'
+      set: [function-definition-params, global-function-identifier-generic]
+    - match: '(?={{path_lookahead}}\s*(\(|$))'
       set: [function-definition-params, global-function-identifier]
     - match: '(?=\S)'
       pop: true
 
+  global-function-identifier-generic:
+    - include: angle-brackets
+    - match: '::'
+      scope: punctuation.accessor.c++
+    - match: '(?={{identifier}}<.*>\s*\()'
+      push:
+        - meta_content_scope: entity.name.function.c++
+        - include: identifiers
+        - match: '(?=<)'
+          pop: true
+    - match: '(?={{identifier}}\s*\()'
+      push:
+        - meta_content_scope: entity.name.function.c++
+        - include: identifiers
+        - match: ''
+          pop: true
+    - match: '(?=\()'
+      pop: true
+
   global-function-identifier:
-    - meta_content_scope: meta.function.c++ entity.name.function.c++
+    - meta_content_scope: entity.name.function.c++
     - include: identifiers
     - match: ''
       pop: true
@@ -720,30 +800,44 @@ contexts:
   function-definition-params:
     - meta_content_scope: meta.function.c++
     - include: comments
-    - match: \(
-      scope: punctuation.definition.parameters.c++
+    - match: '(?=\()'
       set:
-        - meta_content_scope: meta.function.c++
-        - match : \)
-          scope: punctuation.definition.parameters.c++
-          set: function-definition-continue
-        - include: expressions-minus-generic-type
+        - match: \(
+          scope: meta.function.parameters.c++ meta.group.c++ punctuation.definition.group.begin.c++
+          set:
+            - meta_content_scope: meta.function.parameters.c++ meta.group.c++
+            - match : \)
+              scope: punctuation.definition.group.end.c++
+              set: function-definition-continue
+            - match: '{{identifier}}(?=\s*(,|\)|=))'
+              scope: variable.parameter.c++
+            - match: '='
+              scope: keyword.operator.assignment.c++
+              push:
+                - match: '(?=,|\))'
+                  pop: true
+                - include: expressions-minus-generic-type
+            - include: expressions-minus-generic-type
     - match: (?=\S)
       pop: true
 
   function-definition-continue:
     - meta_content_scope: meta.function.c++
     - include: comments
-    - match: ';'
+    - match: '(?=;)'
       pop: true
     - match: '->'
       scope: punctuation.separator.c++
       set: function-definition-trailing-return
     - include: function-specifiers
-    - match: (=)\s*(0)
-      captures:
-        1: keyword.operator.assignment.c++
-        2: constant.numeric.c++
+    - match: '='
+      scope: keyword.operator.assignment.c++
+    - match: '&'
+      scope: keyword.operator.c++
+    - match: \b0\b
+      scope: constant.numeric.c++
+    - match: \b(default|delete)\b
+      scope: storage.modifier.c++
     - match: '(?=\{)'
       set: function-definition-body
     - match: '(?=\S)'
@@ -751,7 +845,7 @@ contexts:
 
   function-definition-trailing-return:
     - include: comments
-    - match: ';'
+    - match: '(?=;)'
       pop: true
     - match: '(?=\{)'
       set: function-definition-body
@@ -761,14 +855,16 @@ contexts:
   function-definition-body:
     - meta_content_scope: meta.function.c++ meta.block.c++
     - match: '\{'
-      scope: punctuation.definition.block.c++
+      scope: punctuation.definition.block.begin.c++
       set:
         - meta_content_scope: meta.function.c++ meta.block.c++
         - match: '\}'
-          scope: meta.function.c++ meta.block.c++ punctuation.definition.block.c++
+          scope: meta.function.c++ meta.block.c++ punctuation.definition.block.end.c++
           pop: true
         - match: (?=^\s*#\s*(elif|else|endif)\b)
           pop: true
+        - match: '(?=({{before_tag}})([^(;]+$|.*\{))'
+          push: data-structures
         - include: statements
 
   ## Data structures including classes, structs, unions and enums
@@ -792,85 +888,131 @@ contexts:
   data-structures-class-definition:
     - meta_scope: meta.class.c++
     - include: data-structures-definition-common-begin
-    - match: '{{identifier}}\s*(?=;)'
+    # Handle macros so they aren't matched as the class name
+    - match: '{{macro_identifier}}(?=\s+{{identifier}})'
+    - match: '{{identifier}}(?={{data_structures_forward_decl_lookahead}})'
       scope: entity.name.class.forward-decl.c++
-      pop: true
+      set: data-structures-class-definition-after-identifier
     - match: '{{identifier}}'
       scope: entity.name.class.c++
+      set: data-structures-class-definition-after-identifier
+    - match: '(?=[:{])'
+      set: data-structures-class-definition-after-identifier
+    - match: '(?=;)'
+      pop: true
+
+  data-structures-class-definition-after-identifier:
+    - meta_content_scope: meta.class.c++
+    - include: data-structures-definition-common-begin
+    # No matching of identifiers since they should all be macros at this point
     - include: data-structures-definition-common-end
     - match: '\{'
-      scope: meta.block.c++ punctuation.definition.block.c++
+      scope: meta.block.c++ punctuation.definition.block.begin.c++
       set:
         - meta_content_scope: meta.class.c++ meta.block.c++
         - match: '\}'
-          scope: meta.class.c++ meta.block.c++ punctuation.definition.block.c++
+          scope: meta.class.c++ meta.block.c++ punctuation.definition.block.end.c++
           pop: true
         - include: data-structures-body
 
   data-structures-struct-definition:
     - meta_scope: meta.struct.c++
     - include: data-structures-definition-common-begin
-    - match: '{{identifier}}\s*(?=;)'
+    # Handle macros so they aren't matched as the struct name
+    - match: '{{macro_identifier}}(?=\s+{{identifier}})'
+    - match: '{{identifier}}(?={{data_structures_forward_decl_lookahead}})'
       scope: entity.name.struct.forward-decl.c++
-      pop: true
+      set: data-structures-struct-definition-after-identifier
     - match: '{{identifier}}'
       scope: entity.name.struct.c++
+      set: data-structures-struct-definition-after-identifier
+    - match: '(?=[:{])'
+      set: data-structures-struct-definition-after-identifier
+    - match: '(?=;)'
+      pop: true
+
+  data-structures-struct-definition-after-identifier:
+    - meta_content_scope: meta.struct.c++
+    - include: data-structures-definition-common-begin
+    # No matching of identifiers since they should all be macros at this point
     - include: data-structures-definition-common-end
     - match: '\{'
-      scope: meta.block.c++ punctuation.definition.block.c++
+      scope: meta.block.c++ punctuation.definition.block.begin.c++
       set:
         - meta_content_scope: meta.struct.c++ meta.block.c++
         - match: '\}'
-          scope: meta.struct.c++ meta.block.c++ punctuation.definition.block.c++
+          scope: meta.struct.c++ meta.block.c++ punctuation.definition.block.end.c++
           pop: true
         - include: data-structures-body
 
   data-structures-enum-definition:
     - meta_scope: meta.enum.c++
     - include: data-structures-definition-common-begin
-    - match: '{{identifier}}\s*(?=;)'
+    # Handle macros so they aren't matched as the enum name
+    - match: '{{macro_identifier}}(?=\s+{{identifier}})'
+    - match: '{{identifier}}(?={{data_structures_forward_decl_lookahead}})'
       scope: entity.name.enum.forward-decl.c++
-      pop: true
+      set: data-structures-enum-definition-after-identifier
     - match: '{{identifier}}'
       scope: entity.name.enum.c++
+      set: data-structures-enum-definition-after-identifier
+    - match: '(?=[:{])'
+      set: data-structures-enum-definition-after-identifier
+    - match: '(?=;)'
+      pop: true
+
+  data-structures-enum-definition-after-identifier:
+    - meta_content_scope: meta.enum.c++
+    - include: data-structures-definition-common-begin
+    # No matching of identifiers since they should all be macros at this point
     - include: data-structures-definition-common-end
     - match: '\{'
-      scope: meta.block.c++ punctuation.definition.block.c++
+      scope: meta.block.c++ punctuation.definition.block.begin.c++
       set:
         - meta_content_scope: meta.enum.c++ meta.block.c++
         # Enums don't support methods so we have a simplified body
         - match: '\}'
-          scope: meta.enum.c++ meta.block.c++ punctuation.definition.block.c++
+          scope: meta.enum.c++ meta.block.c++ punctuation.definition.block.end.c++
           pop: true
-        - include: expressions
+        - include: statements
 
   data-structures-union-definition:
     - meta_scope: meta.union.c++
     - include: data-structures-definition-common-begin
-    - match: '{{identifier}}\s*(?=;)'
+    # Handle macros so they aren't matched as the union name
+    - match: '{{macro_identifier}}(?=\s+{{identifier}})'
+    - match: '{{identifier}}(?={{data_structures_forward_decl_lookahead}})'
       scope: entity.name.union.forward-decl.c++
-      pop: true
+      set: data-structures-union-definition-after-identifier
     - match: '{{identifier}}'
       scope: entity.name.union.c++
-    # Unions don't support base classes
+      set: data-structures-union-definition-after-identifier
+    - match: '(?=[{])'
+      set: data-structures-union-definition-after-identifier
     - match: '(?=;)'
       pop: true
+
+  data-structures-union-definition-after-identifier:
+    - meta_content_scope: meta.union.c++
+    - include: data-structures-definition-common-begin
+    # No matching of identifiers since they should all be macros at this point
+    # Unions don't support base classes
     - include: angle-brackets
     - match: '\{'
-      scope: meta.block.c++ punctuation.definition.block.c++
+      scope: meta.block.c++ punctuation.definition.block.begin.c++
       set:
         - meta_content_scope: meta.union.c++ meta.block.c++
         - match: '\}'
-          scope: meta.union.c++ meta.block.c++ punctuation.definition.block.c++
+          scope: meta.union.c++ meta.block.c++ punctuation.definition.block.end.c++
           pop: true
         - include: data-structures-body
+    - match: '(?=;)'
+      pop: true
 
   data-structures-definition-common-begin:
     - include: comments
     - include: modifiers-parens
     - include: modifiers
-    # Handle macros so they aren't matched as the class name
-    - match: '\b[[:upper:][:digit:]_]+\b'
 
   data-structures-definition-common-end:
     - include: angle-brackets
@@ -882,21 +1024,20 @@ contexts:
         - include: modifiers
         - match: '\b(virtual|{{visibility_modifiers}})\b'
           scope: storage.modifier.c++
-        - match: (?={{path}})
+        - match: (?={{path_lookahead}})
           push:
             - meta_scope: entity.other.inherited-class.c++
             - include: identifiers
             - match: ''
               pop: true
         - include: angle-brackets
-        - match: (?=\{)
+        - match: (?=\{|;)
           pop: true
     - match: '(?=;)'
       pop: true
 
   data-structures-body:
     - include: preprocessor-data-structures
-    - include: comments
     - match: '(?=\btemplate\b)'
       push:
         - include: template
@@ -912,23 +1053,43 @@ contexts:
     - include: expressions-minus-generic-type
 
   data-structures-modifier:
+    - match: '\bfriend\b'
+      scope: storage.modifier.c++
+      push:
+        - match: (?=;)
+          pop: true
+        - match: '\b({{before_tag}})\b'
+          scope: storage.type.c++
+        - include: expressions-minus-function-call
     - include: comments
     - include: modifiers-parens
     - include: modifiers
     # Destructor
-    - match: '(?:{{identifier}}(::))?~{{identifier}}(?=\s*(\(|$))'
-      scope: meta.method.c++ entity.name.function.destructor.c++
+    - match: '(?:{{identifier}}\s*(::)\s*)?~{{identifier}}(?=\s*(\(|$))'
+      scope: meta.method.destructor.c++ entity.name.function.destructor.c++
       captures:
         1: punctuation.accessor.c++
       set: method-definition-params
+    # It's a macro, not a consructor if there is no type in the first param
+    - match: '({{identifier}})\s*(\()(?=\s*{{identifier}}\s*[),])'
+      captures:
+        1: variable.function.c++
+        2: meta.group.c++ punctuation.definition.group.begin.c++
+      push:
+        - meta_scope: meta.function-call.c++
+        - meta_content_scope: meta.group.c++
+        - match: '\)'
+          scope: meta.group.c++ punctuation.definition.group.end.c++
+          pop: true
+        - include: expressions
     # Constructor
     - match: '((?!{{before_tag}}|template){{identifier}})(?=\s*\()'
-      scope: meta.method.c++ entity.name.function.constructor.c++
+      scope: meta.method.constructor.c++ entity.name.function.constructor.c++
       set: method-definition-params
     # Long form constructor
-    - match: '({{identifier}}(::){{identifier}})(?=\s*\()'
+    - match: '({{identifier}}\s*(::)\s*{{identifier}})(?=\s*\()'
       captures:
-        1: meta.method.c++ entity.name.function.constructor.c++
+        1: meta.method.constructor.c++ entity.name.function.constructor.c++
         2: punctuation.accessor.c++
       push: method-definition-params
     - match: '(?=\S)'
@@ -942,7 +1103,7 @@ contexts:
     - match: '(operator)\s+({{identifier}})(?=\s*(\(|$))'
       captures:
         1: keyword.control.c++
-        2: entity.name.function.c++
+        2: meta.method.c++ entity.name.function.c++
       set: method-definition-params
     - match: '(?=\b({{control_keywords}}|{{operator_keywords}}|{{casts}}|{{memory_operators}}|{{other_keywords}})\b)'
       pop: true
@@ -956,15 +1117,16 @@ contexts:
           \s+
           (?=
             (?![[:upper:][:digit:]_]+\b|__declspec|{{before_tag}})
-            {{path}}
-            \s*
-            [*&]?
-            \s+{{identifier}}
+            {{path_lookahead}}
+            (\s+{{identifier}}\s*\(|\s*[*&])
           )
         )
       captures:
         1: storage.type.c++
-      set: data-structures-maybe-method
+      set:
+        - include: identifiers
+        - match: ''
+          set: data-structures-maybe-method
     # The previous match handles return types of struct/enum/etc from a func,
     # there this one exits the context to allow matching an actual struct/class
     - match: '(?=\b({{before_tag}})\b)'
@@ -988,7 +1150,7 @@ contexts:
     # Consume pointer info, macros and any type info that was offset by macros
     - match: \*|&
       scope: keyword.operator.c++
-    - match: '{{type_qualifier}}'
+    - match: '\b({{type_qualifier}})\b'
       scope: storage.modifier.c++
     - match: '{{non_angle_brackets}}'
       pop: true
@@ -998,22 +1160,35 @@ contexts:
     - include: modifiers
     # Operator overloading
     - match: '{{operator_method_name}}(?=\s*(\(|$))'
-      scope: entity.name.function.c++
+      scope: meta.method.c++ entity.name.function.c++
       set: method-definition-params
     # Identifier that is not the function name - likely a macro or type
-    - match: '(?={{path}}((?!\s*(\(|$))\s+|[*&]))'
+    - match: '(?={{path_lookahead}}([ \t]+|[*&])(?!\s*(<|::|\(|$)))'
       push:
         - include: identifiers
         - match: ''
           pop: true
     # Real function definition
-    - match: '(?={{path}}\s*(\(|$))'
+    - match: '(?={{path_lookahead}}({{generic_lookahead}})\s*(\(|$))'
+      set: [method-definition-params, data-structures-function-identifier-generic]
+    - match: '(?={{path_lookahead}}\s*(\(|$))'
       set: [method-definition-params, data-structures-function-identifier]
     - match: '(?=\S)'
       pop: true
 
+  data-structures-function-identifier-generic:
+    - include: angle-brackets
+    - match: '(?={{identifier}})'
+      push:
+        - meta_content_scope: entity.name.function.c++
+        - include: identifiers
+        - match: '(?=<)'
+          pop: true
+    - match: '(?=\()'
+      pop: true
+
   data-structures-function-identifier:
-    - meta_content_scope: meta.function.c++ entity.name.function.c++
+    - meta_content_scope: entity.name.function.c++
     - include: identifiers
     - match: ''
       pop: true
@@ -1021,50 +1196,63 @@ contexts:
   method-definition-params:
     - meta_content_scope: meta.method.c++
     - include: comments
-    - match: \(
-      scope: punctuation.definition.parameters.c++
+    - match: '(?=\()'
       set:
-        - meta_content_scope: meta.method.c++
-        - match : \)
-          scope: punctuation.definition.parameters.c++
-          set: method-definition-continue
-        - include: expressions-minus-generic-type
+        - match: \(
+          scope: meta.method.parameters.c++ meta.group.c++ punctuation.definition.group.begin.c++
+          set:
+            - meta_content_scope: meta.method.parameters.c++ meta.group.c++
+            - match : \)
+              scope: meta.group.c++ punctuation.definition.group.end.c++
+              set: method-definition-continue
+            - match: '{{identifier}}(?=\s*(,|\)|=))'
+              scope: variable.parameter.c++
+            - match: '='
+              scope: keyword.operator.assignment.c++
+              push:
+                - match: '(?=,|\))'
+                  pop: true
+                - include: expressions-minus-generic-type
+            - include: expressions-minus-generic-type
     - match: '(?=\S)'
       pop: true
 
   method-definition-continue:
     - meta_content_scope: meta.method.c++
     - include: comments
-    - match: ';'
+    - match: '(?=;)'
       pop: true
     - match: '->'
       scope: punctuation.separator.c++
       set: method-definition-trailing-return
     - include: function-specifiers
-    - match: (=)\s*(0)
-      captures:
-        1: keyword.operator.assignment.c++
-        2: constant.numeric.c++
-    - match: (=)\s*(default|delete)
-      captures:
-        1: keyword.operator.assignment.c++
-        2: storage.modifier.c++
-    - match: ':'
-      scope: punctuation.separator.initializer-list.c++
-      push:
-        - meta_scope: meta.class.constructor.initializer-list.c++
-        - match: '(?=\{|;)'
-          pop: true
-        - match: '({{identifier}})\s*(\()'
-          captures:
-            1: variable.other.readwrite.member.c++
-            2: punctuation.definition.parameters.c++
-          push:
-            - match: \)
-              scope: punctuation.definition.parameters.c++
-              pop: true
+    - match: '='
+      scope: keyword.operator.assignment.c++
+    - match: '&'
+      scope: keyword.operator.c++
+    - match: \b0\b
+      scope: constant.numeric.c++
+    - match: \b(default|delete)\b
+      scope: storage.modifier.c++
+    - match: '(?=:)'
+      set:
+        - match: ':'
+          scope: punctuation.separator.initializer-list.c++
+          set:
+            - meta_scope: meta.method.constructor.initializer-list.c++
+            - match: '(?=\{|;)'
+              set: method-definition-continue
+            - match: '({{identifier}})\s*(\()'
+              captures:
+                1: variable.other.readwrite.member.c++
+                2: meta.group.c++ punctuation.definition.group.begin.c++
+              push:
+                - meta_content_scope: meta.group.c++
+                - match: \)
+                  scope: meta.group.c++ punctuation.definition.group.end.c++
+                  pop: true
+                - include: expressions
             - include: expressions
-        - include: expressions
     - match: '(?=\{)'
       set: method-definition-body
     - match: '(?=\S)'
@@ -1072,7 +1260,7 @@ contexts:
 
   method-definition-trailing-return:
     - include: comments
-    - match: ';'
+    - match: '(?=;)'
       pop: true
     - match: '(?=\{)'
       set: method-definition-body
@@ -1082,14 +1270,16 @@ contexts:
   method-definition-body:
     - meta_content_scope: meta.method.c++ meta.block.c++
     - match: '\{'
-      scope: punctuation.definition.block.c++
+      scope: punctuation.definition.block.begin.c++
       set:
         - meta_content_scope: meta.method.c++ meta.block.c++
         - match: '\}'
-          scope: meta.method.c++ meta.block.c++ punctuation.definition.block.c++
+          scope: meta.method.c++ meta.block.c++ punctuation.definition.block.end.c++
           pop: true
         - match: (?=^\s*#\s*(elif|else|endif)\b)
           pop: true
+        - match: '(?=({{before_tag}})([^(;]+$|.*\{))'
+          push: data-structures
         - include: statements
 
   ## Preprocessor for data-structures
@@ -1185,6 +1375,7 @@ contexts:
           push:
             - match: (?=^\s*#\s*endif\b)
               pop: true
+            - include: preprocessor-global
             - include: negated-block
             - include: global
         - match: ""
@@ -1217,6 +1408,7 @@ contexts:
           push:
             - match: (?=^\s*#\s*(else|endif)\b)
               pop: true
+            - include: preprocessor-global
             - include: negated-block
             - include: global
 
@@ -1249,8 +1441,9 @@ contexts:
     - match: (?=^\s*#\s*(elif|else)\b)
       push: preprocessor-elif-else-branch-global
     - match: \{
-      scope: punctuation.definition.block.c++
+      scope: punctuation.definition.block.begin.c++
       set: preprocessor-block-if-branch-global
+    - include: preprocessor-global
     - include: negated-block
     - include: global
 
@@ -1263,7 +1456,7 @@ contexts:
     - match: (?=^\s*#\s*(elif|else)\b)
       push: preprocessor-elif-else-branch-global
     - match: \}
-      scope: punctuation.definition.block.c++
+      scope: punctuation.definition.block.end.c++
       set: preprocessor-if-branch-global
     - include: statements
 
@@ -1274,7 +1467,7 @@ contexts:
         1: meta.preprocessor.c++ keyword.control.import.c++
       set: preprocessor-block-finish-if-branch-global
     - match: \}
-      scope: punctuation.definition.block.c++
+      scope: punctuation.definition.block.end.c++
       pop: true
     - include: statements
 
@@ -1284,13 +1477,14 @@ contexts:
         1: keyword.control.import.c++
       pop: true
     - match: \}
-      scope: punctuation.definition.block.c++
+      scope: punctuation.definition.block.end.c++
       set: preprocessor-if-branch-global
     - include: statements
 
   preprocessor-elif-else-branch-global:
     - match: (?=^\s*#\s*(endif)\b)
       pop: true
+    - include: preprocessor-global
     - include: negated-block
     - include: global
 
@@ -1377,7 +1571,7 @@ contexts:
     - match: (?=^\s*#\s*(elif|else)\b)
       push: preprocessor-elif-else-branch-statements
     - match: \{
-      scope: punctuation.definition.block.c++
+      scope: punctuation.definition.block.begin.c++
       set: preprocessor-block-if-branch-statements
     - include: negated-block
     - include: statements
@@ -1391,7 +1585,7 @@ contexts:
     - match: (?=^\s*#\s*(elif|else)\b)
       push: preprocessor-elif-else-branch-statements
     - match: \}
-      scope: punctuation.definition.block.c++
+      scope: punctuation.definition.block.end.c++
       set: preprocessor-if-branch-statements
     - include: statements
 
@@ -1402,7 +1596,7 @@ contexts:
         1: meta.preprocessor.c++ keyword.control.import.c++
       set: preprocessor-block-finish-if-branch-statements
     - match: \}
-      scope: punctuation.definition.block.c++
+      scope: punctuation.definition.block.end.c++
       pop: true
     - include: statements
 
@@ -1412,7 +1606,7 @@ contexts:
         1: keyword.control.import.c++
       pop: true
     - match: \}
-      scope: meta.block.c++ punctuation.definition.block.c++
+      scope: meta.block.c++ punctuation.definition.block.end.c++
       set: preprocessor-if-branch-statements
     - include: statements
 
@@ -1426,10 +1620,10 @@ contexts:
 
   negated-block:
     - match: '\}'
-      scope: punctuation.definition.block.c++
+      scope: punctuation.definition.block.end.c++
       push:
         - match: '\{'
-          scope: punctuation.definition.block.c++
+          scope: punctuation.definition.block.begin.c++
           pop: true
         - match: (?=^\s*#\s*(elif|else|endif)\b)
           pop: true
@@ -1437,34 +1631,38 @@ contexts:
 
   preprocessor-macro-define:
     - match: ^\s*(\#\s*define)\b
-      scope: keyword.control.import.define.c++
+      captures:
+        1: meta.preprocessor.macro.c++ keyword.control.import.define.c++
       push:
-        - meta_scope: meta.preprocessor.macro.c++
+        - meta_content_scope: meta.preprocessor.macro.c++
         - include: scope:source.c#preprocessor-line-continuation
-        - include: scope:source.c#preprecessor-line-ending
+        - include: scope:source.c#preprocessor-line-ending
         - include: scope:source.c#preprocessor-comments
-        - match: '({{identifier}})(\()'
-          captures:
-            1: entity.name.function.preprocessor.c++
-            2: punctuation.definition.parameters.c++
-          set: [preprocessor-macro-definition, preprocessor-macro-params]
+        - match: '({{identifier}})(?=\()'
+          scope: entity.name.function.preprocessor.c++
+          set:
+            - match: '\('
+              scope: punctuation.definition.group.begin.c++
+              set: preprocessor-macro-params
         - match: '{{identifier}}'
           scope: entity.name.constant.preprocessor.c++
           set: preprocessor-macro-definition
 
   preprocessor-macro-params:
-    - meta_scope: meta.preprocessor.params.macro.c++
+    - meta_scope: meta.preprocessor.macro.parameters.c++ meta.group.c++
     - match: '{{identifier}}'
       scope: variable.parameter.c++
     - match: \)
-      scope: punctuation.definition.parameters.c++
-      pop: true
+      scope: punctuation.definition.group.end.c++
+      set: preprocessor-macro-definition
     - match: ','
+      scope: punctuation.separator.c++
       push:
         - match: '{{identifier}}'
           scope: variable.parameter.c++
           pop: true
         - include: scope:source.c#preprocessor-line-continuation
+        - include: scope:source.c#preprocessor-comments
         - match: '\.\.\.'
           scope: punctuation.definition.variadic.c++
         - match: '(?=\))'
@@ -1477,6 +1675,7 @@ contexts:
         - match: '\S+'
           scope: invalid.illegal.unexpected-character.c++
     - include: scope:source.c#preprocessor-line-continuation
+    - include: scope:source.c#preprocessor-comments
     - match: '\.\.\.'
       scope: punctuation.definition.variadic.c++
     - match: (/\*).*(\*/)
@@ -1488,12 +1687,15 @@ contexts:
       scope: invalid.illegal.unexpected-end-of-line.c++
 
   preprocessor-macro-definition:
-    - meta_scope: meta.preprocessor.macro.definition.c++
+    - meta_content_scope: meta.preprocessor.macro.c++
     - include: scope:source.c#preprocessor-line-continuation
-    - include: scope:source.c#preprecessor-line-ending
+    - include: scope:source.c#preprocessor-line-ending
+    - include: scope:source.c#preprocessor-comments
     # Don't define blocks in define statements
-    - match: '\{|\}'
-      scope: punctuation.definition.block.c++
+    - match: '\{'
+      scope: punctuation.definition.block.begin.c++
+    - match: '\}'
+      scope: punctuation.definition.block.end.c++
     - include: expressions
 
   preprocessor-other:
@@ -1503,7 +1705,7 @@ contexts:
       push:
         - meta_scope: meta.preprocessor.c++
         - include: scope:source.c#preprocessor-line-continuation
-        - include: scope:source.c#preprecessor-line-ending
+        - include: scope:source.c#preprocessor-line-ending
         - include: scope:source.c#preprocessor-comments
         - match: \bdefined\b
           scope: keyword.control.c++
@@ -1516,7 +1718,7 @@ contexts:
       push:
         - meta_scope: meta.preprocessor.diagnostic.c++
         - include: scope:source.c#preprocessor-line-continuation
-        - include: scope:source.c#preprecessor-line-ending
+        - include: scope:source.c#preprocessor-line-ending
         - include: scope:source.c#preprocessor-comments
         - include: strings
         - match: '\S+'
@@ -1527,7 +1729,7 @@ contexts:
       push:
         - meta_scope: meta.preprocessor.include.c++
         - include: scope:source.c#preprocessor-line-continuation
-        - include: scope:source.c#preprecessor-line-ending
+        - include: scope:source.c#preprocessor-line-ending
         - include: scope:source.c#preprocessor-comments
         - match: '"'
           scope: punctuation.definition.string.begin.c++
