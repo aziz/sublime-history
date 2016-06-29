@@ -1,0 +1,10 @@
+*.dmg
+Sublime Text.app
+Contents/_CodeSignature
+Contents/SharedSupport/bin/subl
+Contents/MacOS/plugin_host
+Contents/MacOS/python3.3.zip
+Contents/MacOS/Packages/*.sublime-package
+Contents/MacOS/Sublime Text
+Contents/MacOS/crash_reporter
+Contents/MacOS/update_installer
