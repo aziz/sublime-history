@@ -6,6 +6,18 @@ h2 { color: #333; font-size: 2.0em; margin: 0; }
 .release-date, .forum-link { font-size: 10pt }
 </style>
 
+<h2>Build 3110</h2>
+<div class="release-date">Release Date: 12 April 2016</div>
+<ul>
+    <li>Improved rendering performance, especially on high resolution screens</li>
+    <li>New C++ syntax definition with improved accuracy and performance</li>
+    <li>Various other syntax highlighting improvements</li>
+    <li>HTML: Pressing enter when between a tag pair will increase indentation</li>
+    <li>Improved file indexing behavior with multiple windows open</li>
+    <li>API: Added window.status_message</li>
+    <li>API: Windows is now up-to-date with the other platforms, using Python 3.3.6 and having the sqlite3 and bz2 modules</li>
+</ul>
+
 <h2>Build 3109</h2>
 <div class="release-date">Release Date: 18 March 2016</div>
 <ul>

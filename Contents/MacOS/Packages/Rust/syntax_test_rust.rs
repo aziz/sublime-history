@@ -139,6 +139,17 @@ extern crate foo;
 //    ^ - keyword.other
 //     ^^^^^ keyword.other
 
+mod trafile;
+// <- storage.type.module
+mod comment;
+// <- storage.type.module
+mod location;
+
+pub use self::trafile::*;
+// <- storage.modifier
+//   ^ keyword.other
+//      ^^^^^^^^^^^^^^^ meta.path
+
 use std::fmt;
 // <- keyword.other
 //  ^^^^^ meta.path
@@ -586,6 +597,32 @@ macro_rules! print_result {
     )
 }
 
+
+pub fn from_buf_reader<T>(s: io::BufReader<T>) -> Result<isize, &'static str>
+//                                                              ^ keyword.operator
+    where T: io::Read
+//  ^ keyword.other
+{
+    macro_rules! eat_numbers {
+        ($count:expr, $msg:expr) => {{
+        //                          ^ meta.function meta.block meta.macro meta.block meta.block punctuation.definition.block.begin
+        //                           ^ meta.function meta.block meta.macro meta.block meta.block meta.block punctuation.definition.block.begin
+            let parse_err = concat!("Err parsing value in ", $msg);
+            try!{ eat_numbers(&mut lines, $count, parse_err, missing_err, too_many) }
+        //  ^^^^ support.macro
+        //      ^ meta.function meta.block meta.macro meta.block meta.block meta.block meta.block punctuation.definition.block.begin
+        }}
+    };
+     // <- meta.function meta.block - meta.macro
+
+    let mut starts_stops = eat_numbers!(relief_count_total * 2, "starts and stops");
+
+    let starts = starts_stops.split_off(relief_count_total);
+    let stops = starts_stops;
+
+    unimplemented!();
+}
+
 pub mod my_mod {
 //^^^^^^^^^^^^^^ meta.module
 // <- storage.modifier
@@ -659,3 +696,119 @@ pub trait Animal {
     }
 }
 // <- meta.trait meta.block punctuation.definition.block.end
+
+fn collect_vec() {
+    let _: Vec<(usize, usize)> = (0..10).enumerate().collect::<Vec<_>>();
+//         ^^^^^^^^^^^^^^^^^^^ meta.generic
+//             ^ punctuation.definition.type.begin
+//              ^^^^^ storage.type
+//                     ^^^^^ storage.type
+//                          ^ punctuation.definition.type.end
+//                                                            ^^^^^^^^ meta.generic
+//                                                             ^^^^^^ meta.generic meta.generic
+//                                                                 ^ keyword.operator
+    let _: Vec<(usize, usize)> = vec!();
+//                               ^^^^ support.macro
+    let _: Vec<(usize, usize)> = vec!{};
+//                               ^^^^ support.macro
+    let _: Vec<(usize, usize)> = vec![];
+//                               ^^^^ support.macro
+}
+
+macro_rules! forward_ref_binop [
+//                             ^ meta.macro meta.group punctuation.definition.group.begin
+    (impl $imp:ident, $method:ident for $t:ty, $u:ty) => {
+//        ^^^^ variable.parameter
+//             ^^^^^ storage.type
+//                    ^^^^^^^ variable.parameter
+//                            ^^^^^ storage.type
+//                                      ^^ variable.parameter
+//                                         ^^ storage.type
+//                                             ^^ variable.parameter
+//                                                ^^ storage.type
+//                                                    ^^ keyword.operator
+//                                                       ^ meta.macro meta.group meta.block punctuation.definition.block.begin
+        impl<'a, 'b> $imp<&'a $u> for &'b $t {
+//      ^^^^ storage.type.impl
+//          ^^^^^^^^ meta.generic
+//           ^^ storage.modifier.lifetime
+//               ^^ storage.modifier.lifetime
+//                   ^^^^ variable.other
+//                       ^^^^^^^^ meta.generic
+//                        ^ keyword.operator
+//                         ^^ storage.modifier.lifetime
+//                            ^^ variable.other
+//                                ^^^ keyword.other
+//                                    ^ keyword.operator
+//                                     ^^ storage.modifier.lifetime
+//                                        ^^ variable.other
+//                                           ^ meta.macro meta.group meta.block meta.impl meta.block punctuation.definition.block.begin
+            type Output = <$t as $imp<$u>>::Output;
+//                        ^^^^^^^^^^^^^^^^ meta.generic
+//                                        ^^ meta.path
+
+            #[inline]
+//          ^^^^^^^^^ comment.block.attribute
+            fn $method(self, other: &'a $u) -> <$t as $imp<$u>>::Output {
+//          ^^ storage.type.function
+//             ^^^^^^^ variable.other
+//                     ^^^^ variable.language
+//                                  ^ keyword.operator
+//                                   ^^ storage.modifier.lifetime
+//                                      ^^ variable.other
+//                                          ^^ punctuation.separator
+//                                             ^^^^^^^^^^^^^^^^ meta.generic
+//                                                             ^^ meta.path
+//                                                                      ^ meta.macro meta.group meta.block meta.impl meta.block meta.block punctuation.definition.block.begin
+                $imp::$method(*self, *other)
+//              ^^^^ variable.other
+//                    ^^^^^^^ variable.other
+//                            ^ keyword.operator
+//                             ^^^^ variable.language
+//                                   ^ keyword.operator
+            }
+        }
+    }
+]
+
+macro_rules! alternate_group (
+//                           ^ meta.macro meta.group punctuation.definition.group.begin
+    ($a:expr) => (
+//   ^^ variable.parameter
+//      ^^^^ storage.type
+        println!("Test {}!", $a)
+    )
+)
+
+macro_rules! kleene_star {
+    ($($arg:tt)+) => (
+//   ^ meta.macro meta.block meta.group keyword.operator
+//    ^ meta.macro meta.block meta.group punctuation.definition.group.begin
+//     ^^^^ meta.macro meta.block meta.group variable.other
+//         ^^^^^ meta.macro meta.block meta.group
+//              ^ meta.macro meta.block meta.group punctuation.definition.group.end
+//                ^ meta.macro meta.block keyword.operator
+        println!($($arg));
+    ),
+    ($($arg:tt)*) => (
+//     ^^^^ meta.macro meta.block meta.group variable.other
+//         ^^^^^ meta.macro meta.block meta.group
+//              ^ meta.macro meta.block meta.group punctuation.definition.group.end
+//                ^ meta.macro meta.block keyword.operator
+        println!($($arg)*);
+    ),
+    ($($arg:tt);+) => (
+//     ^^^^ meta.macro meta.block meta.group variable.other
+//         ^^^^^^ meta.macro meta.block meta.group
+//               ^ meta.macro meta.block meta.group punctuation.definition.group.end
+//                 ^ meta.macro meta.block keyword.operator
+        println!($($arg));
+    ),
+    ($($arg:tt),*) => (
+//     ^^^^ meta.macro meta.block meta.group variable.other
+//         ^^^^^^ meta.macro meta.block meta.group
+//               ^ meta.macro meta.block meta.group punctuation.definition.group.end
+//                 ^ meta.macro meta.block keyword.operator
+        println!($($arg)*);
+    )
+}

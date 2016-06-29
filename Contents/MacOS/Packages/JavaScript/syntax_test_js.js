@@ -169,7 +169,10 @@ var obj = {
 //  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.function.declaration - meta.function.anonymous
     // ^ meta.object-literal.key string.quoted.double entity.name.function
     //    ^ constant.character.escape
-    }
+    },
+
+    key: 'str' + (true ? 'true' : 'false'),
+//                ^^^^ constant.language.boolean
 
     qux()
 //  ^^^^^ meta.function.declaration - meta.function.anonymous
@@ -408,6 +411,14 @@ Proto.prototype.attr
 // ^ support.class
 //     ^ support.constant.prototype
 //               ^ meta.property.object
+
+Proto.prototype = {
+    funcName: function() {
+//  ^^^^^^^^^^^^^^^^^^^^ meta.function.declaration
+//  ^^^^^^^^ entity.name.function
+//          ^ punctuation.separator.key-value
+    }
+}
 
 sources.DOM.status()
 sources.DOM
