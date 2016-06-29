@@ -74,7 +74,6 @@ class EditSettingsCommand(sublime_plugin.ApplicationCommand):
         base_view = new_window.active_view_in_group(0)
         user_view = new_window.active_view_in_group(1)
 
-        base_view.set_read_only(True)
         base_settings = base_view.settings()
         base_settings.set('edit_settings_view', 'base')
         base_settings.set('edit_settings_other_view_id', user_view.id())

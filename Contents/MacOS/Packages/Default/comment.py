@@ -2,7 +2,7 @@ import sublime
 import sublime_plugin
 
 
-def advance_to_first_non_ws(view, pt):
+def advance_to_first_non_white_space_on_line(view, pt):
     while True:
         c = view.substr(pt)
         if c == " " or c == "\t":
@@ -13,7 +13,7 @@ def advance_to_first_non_ws(view, pt):
     return pt
 
 
-def has_non_ws_on_line(view, pt):
+def has_non_white_space_on_line(view, pt):
     while True:
         c = view.substr(pt)
         if c == " " or c == "\t":
@@ -85,7 +85,8 @@ class ToggleCommentCommand(sublime_plugin.TextCommand):
 
         found_line_comment = False
 
-        start_positions = [advance_to_first_non_ws(view, r.begin()) for r in view.lines(region)]
+        start_positions = [advance_to_first_non_white_space_on_line(
+            view, r.begin()) for r in view.lines(region)]
         start_positions.reverse()
 
         for pos in start_positions:
@@ -102,8 +103,10 @@ class ToggleCommentCommand(sublime_plugin.TextCommand):
     def is_entirely_line_commented(self, view, comment_data, region):
         (line_comments, block_comments) = comment_data
 
-        start_positions = [advance_to_first_non_ws(view, r.begin()) for r in view.lines(region)]
-        start_positions = list(filter(lambda p: has_non_ws_on_line(view, p), start_positions))
+        start_positions = [advance_to_first_non_white_space_on_line(
+            view, r.begin()) for r in view.lines(region)]
+        start_positions = list(filter(
+            lambda p: has_non_white_space_on_line(view, p), start_positions))
 
         if len(start_positions) == 0:
             return False
@@ -142,7 +145,8 @@ class ToggleCommentCommand(sublime_plugin.TextCommand):
 
         # Remove any blank lines from consideration, they make getting the
         # comment start markers to line up challenging
-        non_empty_start_positions = list(filter(lambda p: has_non_ws_on_line(view, p), start_positions))
+        non_empty_start_positions = list(filter(
+            lambda p: has_non_white_space_on_line(view, p), start_positions))
 
         # If all the lines are blank however, just comment away
         if len(non_empty_start_positions) != 0:
@@ -154,7 +158,7 @@ class ToggleCommentCommand(sublime_plugin.TextCommand):
             # This won't work well with mixed spaces and tabs, but really,
             # don't do that!
             for pos in start_positions:
-                indent = advance_to_first_non_ws(view, pos) - pos
+                indent = advance_to_first_non_white_space_on_line(view, pos) - pos
                 if min_indent is None or indent < min_indent:
                     min_indent = indent
 
@@ -211,7 +215,8 @@ class ToggleCommentCommand(sublime_plugin.TextCommand):
             if not has_line_comment and not block and region.empty():
                 # Use block comments to comment out the line
                 line = self.view.line(region.a)
-                line = sublime.Region(advance_to_first_non_ws(self.view, line.a), line.b)
+                line = sublime.Region(
+                    advance_to_first_non_white_space_on_line(self.view, line.a), line.b)
 
                 # Try and remove any existing block comment now
                 if self.remove_block_comment(self.view, edit, comment_data, line):
