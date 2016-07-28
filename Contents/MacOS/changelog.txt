@@ -32,6 +32,12 @@ a {
 
 <h1>Dev Channel Changelog</h1>
 
+<h2>Build 3120</h2>
+<div class="release-date">Release Date: 28 July 2016</div>
+<ul>
+    <li>Fixed a minihtml crash</li>
+</ul>
+
 <h2>Build 3119</h2>
 <div class="release-date">Release Date: 26 July 2016</div>
 <ul>
