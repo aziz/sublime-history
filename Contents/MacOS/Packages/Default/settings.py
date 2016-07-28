@@ -51,7 +51,22 @@ class EditSettingsCommand(sublime_plugin.ApplicationCommand):
             return
 
         if user_file is None:
-            user_file = '${packages}/User/%s' % os.path.basename(base_file)
+            user_package_path = os.path.join(sublime.packages_path(), 'User')
+            user_file = os.path.join(user_package_path, file_name)
+
+            # If the user path does not exist, and it is a supported
+            # platform-variant file path, then try and non-platform-variant
+            # file path.
+            if not os.path.exists(os.path.join(user_package_path, file_name)):
+                for suffix in {'.sublime-keymap', '.sublime-mousemap', '.sublime-menu'}:
+                    platform_suffix = ' (%s)%s' % (platform_name, suffix)
+                    if not file_name.endswith(platform_suffix):
+                        continue
+                    non_platform_file_name = file_name[:-len(platform_suffix)] + suffix
+                    non_platform_path = os.path.join(user_package_path, non_platform_file_name)
+                    if os.path.exists(non_platform_path):
+                        user_file = non_platform_path
+                        break
 
         sublime.run_command('new_window')
         new_window = sublime.active_window()

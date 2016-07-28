@@ -1,10 +1,48 @@
 <style>
-html { background-color: #f6f6f6; }
-body { font-family: monospace; }
+html {
+    background-color: #f6f6f6;
+    margin: 16px;
+}
+body {
+    color: #333;
+    font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+ul {
+    padding-left: 1.2rem;
+}
 li { margin: 2px; }
-h2 { color: #333; font-size: 2.0em; margin: 0; }
-.release-date, .forum-link { font-size: 10pt }
+h1 {
+    font-size: 2.0rem;
+    margin: 0;
+}
+h2 {
+    color: #444;
+    font-size: 1.4rem;
+    margin: 1em 0 0.1em 0;
+}
+a {
+    color: #000;
+}
+.release-date, .forum-link {
+    font-size: 0.9rem;
+    font-style: italic;
+    color: #666;
+}
 </style>
+
+<h1>Dev Channel Changelog</h1>
+
+<h2>Build 3119</h2>
+<div class="release-date">Release Date: 26 July 2016</div>
+<ul>
+    <li>Improved inline build error styling</li>
+    <li>Improved Goto Definition performance when a large number of files are open</li>
+    <li>Phantoms are updated when the color scheme or font size changes</li>
+    <li>Fixed an issue where clicking with the mouse would sometimes position the selection incorrectly</li>
+    <li>minihtml: Added support for padding and backgrounds on inline elements, relative positioning, border-radius, rem units, child selectors and various CSS function calls (color-mod, var, rgb, rgba, hsl and hsla).</li>
+    <li>Linux: Improved rendering performance for some systems</li>
+    <li>Various syntax highlighting improvements</li>
+</ul>
 
 <h2>Build 3118</h2>
 <div class="release-date">Release Date: 28 June 2016</div>

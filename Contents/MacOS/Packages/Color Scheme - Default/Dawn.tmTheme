@@ -29,26 +29,6 @@
 				<string>#808080</string>
 				<key>shadowWidth</key>
 				<string>6</string>
-
-				<key>popupCss</key>
-				<string><![CDATA[
-					html {
-						background-color: #FFFFFF;
-						color: #080808;
-					}
-					a {
-						color: #234A97;
-					}
-					.error, .deleted {
-						color: #A71D5D;
-					}
-					.success, .inserted {
-						color: #0B6125;
-					}
-					.warning, .modified {
-						color: #BF4F24;
-					}
-				]]></string>
 			</dict>
 		</dict>
 		<dict>

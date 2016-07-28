@@ -1,5 +1,6 @@
 import collections
 import functools
+import html
 import os
 import subprocess
 import sys
@@ -335,7 +336,8 @@ class ExecCommand(sublime_plugin.WindowCommand, ProcessListener):
         finally:
             self.text_queue_lock.release()
 
-        self.output_view.run_command('append',
+        self.output_view.run_command(
+            'append',
             {'characters': characters, 'force': True, 'scroll_to_end': True})
 
         if self.show_errors_inline and characters.find('\n') >= 0:
@@ -388,6 +390,35 @@ class ExecCommand(sublime_plugin.WindowCommand, ProcessListener):
         sublime.set_timeout(functools.partial(self.finish, proc), 0)
 
     def update_phantoms(self):
+        stylesheet = '''
+            <style>
+                div.error {
+                    padding: 0.4rem 0 0.4rem 0.7rem;
+                    margin: 0.2rem 0;
+                    border-radius: 2px;
+                }
+
+                div.error span.message {
+                    padding-right: 0.7rem;
+                }
+
+                div.error a {
+                    text-decoration: inherit;
+                    padding: 0.35rem 0.7rem 0.45rem 0.8rem;
+                    position: relative;
+                    bottom: 0.05rem;
+                    border-radius: 0 2px 2px 0;
+                    font-weight: bold;
+                }
+                html.dark div.error a {
+                    background-color: #00000018;
+                }
+                html.light div.error a {
+                    background-color: #ffffff18;
+                }
+            </style>
+        '''
+
         for file, errs in self.errs_by_file.items():
             view = self.window.find_open_file(file)
             if view:
@@ -405,9 +436,11 @@ class ExecCommand(sublime_plugin.WindowCommand, ProcessListener):
                     pt = view.text_point(line - 1, column - 1)
                     phantoms.append(sublime.Phantom(
                         sublime.Region(pt, view.line(pt).b),
-                        (text
-                            + ' [<a href=hide style="text-decoration: inherit">'
-                            + chr(0x2715) + '</a>]'),
+                        ('<body id=inline-error>' + stylesheet +
+                            '<div class="error">' +
+                            '<span class="message">' + html.escape(text, quote=False) + '</span>' +
+                            '<a href=hide>' + chr(0x00D7) + '</a></div>' +
+                            '</body>'),
                         sublime.LAYOUT_BELOW,
                         on_navigate=self.on_phantom_navigate))
 

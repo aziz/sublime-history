@@ -212,20 +212,24 @@ class ShowDefinitions(sublime_plugin.EventListener):
         plural = 's' if len(locations) > 1 else ''
 
         body = """
-            <style>
-            p {
-                font-family: sans-serif;
-                font-size: 1.05em;
-                margin: 0;
-            }
-            p.definitions {
-                font-size: 1.1em;
-                font-weight: bold;
-                margin-bottom: 0.25em;
-            }
-            </style>
-            <p class="definitions">Definition%s:</p>
-            <p>%s</p>
+            <body id=show-definitions>
+                <style>
+                    body {
+                        font-family: sans-serif;
+                    }
+                    h1 {
+                        font-size: 1.1rem;
+                        font-weight: bold;
+                        margin: 0 0 0.25em 0;
+                    }
+                    p {
+                        font-size: 1.05rem;
+                        margin: 0;
+                    }
+                </style>
+                <h1>Definition%s:</h1>
+                <p>%s</p>
+            </body>
         """ % (plural, links)
 
         view.show_popup(
