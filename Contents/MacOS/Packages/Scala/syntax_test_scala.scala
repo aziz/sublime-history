@@ -191,6 +191,12 @@ type Foo = Bar[A] forSome { type A }
    0.045e-2
 // ^^^^^^^^ constant.numeric.float.scala
 
+   'a'
+// ^^^ constant.character.literal.scala
+
+   '\u1221'
+// ^^^^^^^^ constant.character.literal.scala
+
    true
 // ^^^^ constant.language.scala
 
@@ -213,7 +219,24 @@ type Foo = Bar[A] forSome { type A }
 // ^^^^^ variable.language.scala
 
    "testing"
+// ^ punctuation.definition.string.begin.scala
 // ^^^^^^^^^ string.quoted.double.scala
+//         ^ punctuation.definition.string.end.scala
+
+  "escaped chars: \u1221 \125 \n"
+//                ^^^^^^ constant.character.escape.scala
+//                        ^^^ constant.character.escape.scala
+//                            ^^ constant.character.escape.scala
+
+  "bad escaping: \p"
+//               ^ invalid.illegal.lone-escape.scala
+
+  """escaped in triple: \u1221 \125 \n"""
+//^^^ punctuation.definition.string.begin.scala
+//                      ^^^^^^ constant.character.escape.scala
+//                             ^^^ - constant.character.escape.scala
+//                                  ^^ - constant.character.escape.scala
+//                                    ^^^ punctuation.definition.string.end.scala
 
    """testing"""
 // ^^^^^^^^^^^^^ string.quoted.triple.scala
@@ -234,6 +257,16 @@ type Foo = Bar[A] forSome { type A }
 //                  ^^ constant.numeric.integer.scala
 //                    ^ punctuation.definition.expression
 //                     ^^^ string.quoted.triple.interpolated.scala
+
+   f"formatted: x: $x%+,.3f ca"
+// ^ support.function
+//                  ^ variable.other.scala
+//                   ^^^^^^ constant.other.formatting.scala
+
+   f"formatted: date: $x%T "
+// ^ support.function
+//                    ^ variable.other.scala
+//                      ^^ constant.other.formatting.scala
 
    Unit
 // ^^^^ storage.type.primitive.scala
@@ -616,10 +649,10 @@ type Foo = Bar[A] forSome { type A }
 
   {
     case foo.Bar => 42
-//       ^^^ - entity.name
+//       ^^^ - variable
 //          ^ punctuation.accessor.scala
     case Bar.foo => 42
-//           ^^^ - entity.name
+//           ^^^ - variable
 //          ^ punctuation.accessor.scala
   }
 
@@ -1021,6 +1054,17 @@ xs: Foo with Bar
 //                  ^^^^^ variable.parameter.scala
 }
 
+{
+   case (x, y: Int => String) => ()
+//                 ^^ keyword.operator.arrow.scala
+//                    ^^^^^^ support.class.scala
+}
+
+{
+   case (foo.bar, _) => ()
+//           ^^^ - variable
+}
+
 val Stuff(thing, other) = ???
 //        ^^^^^ entity.name.val.scala
 //               ^^^^^ entity.name.val.scala
@@ -1046,7 +1090,6 @@ val Stuff(thing, other) = ???
    test
 // ^^^^ - comment
 
-
    /**
    /**
    test
@@ -1057,3 +1100,92 @@ val Stuff(thing, other) = ???
    */
    test
 // ^^^^ - comment
+
+def <(a: Int) = 42
+//  ^ entity.name.function.scala
+//    ^ variable.parameter.scala
+
+   <thing foo="42"/>
+//  ^^^^^ text.xml entity.name.tag.xml
+//        ^^^ text.xml entity.other.attribute-name.localname.xml
+//            ^ text.xml string.quoted.double.xml punctuation.definition.string.begin.xml
+//             ^^ text.xml string.quoted.double.xml
+//               ^ text.xml string.quoted.double.xml punctuation.definition.string.end.xml
+
+   <!-- not a comment -->
+// ^^^^^^^^^^^^^^^^^^^^^^ - comment
+
+   <foo bar="test" baz='test' bin={ 42 }>
+// ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ text.xml meta.tag.xml
+//                                      ^ text.xml meta.tag.xml
+//                     ^ text.xml string.quoted.single.xml punctuation.definition.string.begin.xml
+//                          ^ text.xml string.quoted.single.xml punctuation.definition.string.end.xml
+//                                  ^^ source.scala constant.numeric.integer.scala
+     {
+       42 + "thing"
+//     ^^^^^^^^^^^^ - text.xml
+//     ^^ source.scala constant.numeric.integer.scala
+//          ^^^^^^^ source.scala string.quoted.double.scala
+       // comments!
+//     ^^^^^^^^^^^^ source.scala comment.line.double-slash.scala
+
+       <nested/>
+//     ^^^^^^^^^ - text.xml text.xml
+//     ^^^^^^^^^ text.xml meta.tag.xml
+//      ^^^^^^ entity.name.tag.xml
+     }
+
+     "stuff"
+//   ^^^^^^^ - string
+
+     <!-- comments -->
+//   ^^^^^^^^^^^^^^^^^ comment.block.xml
+
+     <thing/>
+
+     <more>
+       more tags!
+       /* not a comment */
+//     ^^^^^^^^^^^^^^^^^^^ - comment
+     </more>
+   </foo>
+
+   </thing>
+// invalid.illegal.bad-closing-tag.xml
+
+   <?xml version="1.0"?>
+// ^^^^^^^^^^^^^^^^^^^^^ invalid.illegal.reserved-proc-instr.xml
+
+   <?xml
+// ^^^^^ invalid.illegal.reserved-proc-instr.xml
+
+   <?xmll?>
+// ^^^^^^^^ - invalid
+
+   <?foo thing="false"?>
+// ^^ punctuation.definition.tag.begin.xml
+//   ^^^ entity.name.tag.xml
+//             ^^^^^^^ string.quoted.double.xml
+//                    ^^ punctuation.definition.tag.end.xml
+
+   <!-- not a comment -->
+// ^^^^^^^^^^^^^^^^^^^^^^ - comment
+
+   <foo a="&" b="<" c=">"/>
+// ^^^^^^^^^^^^^^^^^^^^^^^^ text.xml meta.tag.xml
+// ^ punctuation.definition.tag.begin.xml
+//         ^ invalid.illegal.bad-ampersand.xml
+//               ^ invalid.illegal.missing-entity.xml
+//                     ^ invalid.illegal.missing-entity.xml
+//                       ^^ punctuation.definition.tag.end.xml
+
+   <foo a="&amp;"/>
+// ^^^^^^^^^^^^^^^^ text.xml meta.tag.xml
+// ^ punctuation.definition.tag.begin.xml
+//          ^^^ constant.character.entity.xml
+
+   <foo>
+// ^ punctuation.definition.tag.begin.xml
+     &amp;
+//   ^^^^^ constant.character.entity.xml - meta.tag.xml
+   </foo>

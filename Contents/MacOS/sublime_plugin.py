@@ -598,6 +598,19 @@ def on_query_completions(view_id, prefix, locations):
         except:
             traceback.print_exc()
 
+    for vel in event_listeners_for_view(v):
+        if 'on_query_completions' in vel.__class__.__dict__:
+            try:
+                res = vel.on_query_completions(prefix, locations)
+
+                if isinstance(res, tuple):
+                    completions += [normalise_completion(c) for c in res[0]]
+                    flags |= res[1]
+                elif isinstance(res, list):
+                    completions += [normalise_completion(c) for c in res]
+            except:
+                traceback.print_exc()
+
     return (completions, flags)
 
 
@@ -605,6 +618,13 @@ def on_hover(view_id, point, hover_zone):
     v = sublime.View(view_id)
     for callback in all_callbacks['on_hover']:
         run_callback('on_hover', callback, lambda: callback.on_hover(v, point, hover_zone))
+
+    for vel in event_listeners_for_view(v):
+        if 'on_hover' in vel.__class__.__dict__:
+            try:
+                vel.on_hover(point, hover_zone)
+            except:
+                traceback.print_exc()
 
 
 def on_text_command(view_id, name, args):
@@ -815,6 +835,9 @@ class ViewEventListener(object):
     @classmethod
     def applies_to_primary_view_only(cls):
         return True
+
+    def __init__(self, view):
+        self.view = view
 
 
 class MultizipImporter(object):
