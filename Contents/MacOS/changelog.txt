@@ -32,6 +32,23 @@ a {
 
 <h1>Dev Channel Changelog</h1>
 
+<h2>Build 3121</h2>
+<div class="release-date">Release Date: 14 September 2016</div>
+<ul>
+    <li>Added a menu item to install Package Control</li>
+    <li>Various syntax highlighting improvements</li>
+    <li>Significant improvements to Scala syntax highlighting, with thanks to <a href="https://github.com/djspiewak">djspiewak</a> and <a href="https://github.com/gwenzek">gwenzek</a></li>
+    <li>File encoding of open files is now stored in the session</li>
+    <li>Fixed some rendering issues with Phantoms</li>
+    <li>Linux and OSX: Improved memory usage</li>
+    <li>minihtml: Support HiDPI on Windows and Linux</li>
+    <li>minihtml: Improved handling of padding and inline elements with background</li>
+    <li>minihtml: Added support for windows style line endings and single quoted attributes</li>
+    <li>API: Don't abort loading packages if a .sublime-package is corrupt</li>
+    <li>API: Fixed edge case when loading third party packages from unicode paths on Windows</li>
+    <li>API: Updated Python 3.3 to commit 8e3b9bf917a7, and SQLite to 3.14.1</li>
+</ul>
+
 <h2>Build 3120</h2>
 <div class="release-date">Release Date: 28 July 2016</div>
 <ul>
@@ -44,10 +61,11 @@ a {
     <li>Improved inline build error styling</li>
     <li>Improved Goto Definition performance when a large number of files are open</li>
     <li>Phantoms are updated when the color scheme or font size changes</li>
+    <li>Significant improvements to LaTeX syntax highlighting, with thanks to <a href="https://github.com/randy3k">randy3k</a></li>
+    <li>Various syntax highlighting improvements</li>
     <li>Fixed an issue where clicking with the mouse would sometimes position the selection incorrectly</li>
     <li>minihtml: Added support for padding and backgrounds on inline elements, relative positioning, border-radius, rem units, child selectors and various CSS function calls (color-mod, var, rgb, rgba, hsl and hsla).</li>
     <li>Linux: Improved rendering performance for some systems</li>
-    <li>Various syntax highlighting improvements</li>
 </ul>
 
 <h2>Build 3118</h2>

@@ -941,36 +941,37 @@ class ZipLoader(object):
         self.packages = {""}
         self.refreshed = time.time()
 
-        z = zipfile.ZipFile(self.zippath, 'r')
-        files = [i.filename for i in z.infolist()]
+        try:
+            with zipfile.ZipFile(self.zippath, 'r') as z:
+                files = [i.filename for i in z.infolist()]
 
-        for f in files:
-            base, ext = os.path.splitext(f)
-            if ext != ".py":
-                continue
+                for f in files:
+                    base, ext = os.path.splitext(f)
+                    if ext != ".py":
+                        continue
 
-            paths = base.split('/')
-            if len(paths) > 0 and paths[len(paths) - 1] == "__init__":
-                paths.pop()
-                self.packages.add('.'.join(paths))
+                    paths = base.split('/')
+                    if len(paths) > 0 and paths[len(paths) - 1] == "__init__":
+                        paths.pop()
+                        self.packages.add('.'.join(paths))
 
-            try:
-                pkg_path = '.'.join(paths)
-                self.contents[pkg_path] = z.read(f).decode('utf-8')
-                self.filenames[pkg_path] = f
-            except UnicodeDecodeError:
-                print(f, "in", self.zippath, "is not utf-8 encoded, unable to load plugin")
-                continue
+                    try:
+                        pkg_path = '.'.join(paths)
+                        self.contents[pkg_path] = z.read(f).decode('utf-8')
+                        self.filenames[pkg_path] = f
+                    except UnicodeDecodeError:
+                        print(f, "in", self.zippath, "is not utf-8 encoded, unable to load plugin")
+                        continue
 
-            while len(paths) > 1:
-                paths.pop()
-                parent = '.'.join(paths)
-                if parent not in self.contents:
-                    self.contents[parent] = ""
-                    self.filenames[parent] = parent
-                    self.packages.add(parent)
-
-        z.close()
+                    while len(paths) > 1:
+                        paths.pop()
+                        parent = '.'.join(paths)
+                        if parent not in self.contents:
+                            self.contents[parent] = ""
+                            self.filenames[parent] = parent
+                            self.packages.add(parent)
+        except (Exception) as e:
+            print("Error loading %s:" % self.zippath, e)
 
 
 override_path = None

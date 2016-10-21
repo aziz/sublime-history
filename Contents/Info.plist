@@ -20,9 +20,9 @@
 	<string>Sublime Text</string>
 
 	<key>CFBundleVersion</key>
-	<string>3120</string>
+	<string>3121</string>
 	<key>CFBundleShortVersionString</key>
-	<string>Build 3120</string>
+	<string>Build 3121</string>
 
 	<key>NSPrincipalClass</key>
 	<string>PXApplication</string>

@@ -480,6 +480,12 @@ class Foo extends React.Component {
 //                      ^ entity.other.inherited-class
     constructor()
     {}
+
+    [foo.bar](arg) {
+//   ^^^^^^^ entity.name.function
+//            ^^^ variable.parameter
+        return this.a;
+    }
 }
 
 () => {}
@@ -487,6 +493,25 @@ class Foo extends React.Component {
  // <- meta.function.declaration punctuation.definition.parameters
 //^^^ meta.function.anonymous meta.function.declaration
 //    ^^ meta.block punctuation.definition.block
+
+const test = ({a, b, c=()=>({active:false}) }) => {}
+//    ^ entity.name.function
+//           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.function.declaration
+//            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.block
+//            ^ punctuation.definition.block.begin
+//             ^ variable.parameter
+//                ^ variable.parameter
+//                   ^ variable.parameter
+//                     ^^^^ meta.function.declaration meta.function.declaration
+//                     ^^ punctuation.definition.parameters
+//                         ^^^^^^^^^^^^^^^^ meta.group
+//                                   ^ constant.language
+//                                          ^ punctuation.definition.block.end
+
+// We can't currently detect this properly, but we need to consume => properly
+([a,
+  b]) => { }
+//    ^^ storage.type.function.arrow
 
 MyClass.foo = function() {}
 // ^^^^^^^^^^^^^^^^^^^^^ meta.function.declaration - meta.function.anonymous

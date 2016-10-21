@@ -194,6 +194,7 @@ contexts:
       scope: constant.other.symbol.ruby
       captures:
         1: punctuation.definition.constant.ruby
+      push: try-regex
     - match: '\b(nil|true|false)\b(?![?!])'
       scope: constant.language.ruby
     - match: '\b(__(FILE|LINE|ENCODING)__|self)\b(?![?!])'
@@ -283,7 +284,7 @@ contexts:
     - meta_content_scope: meta.block.parameters.ruby
     - match: \|
       scope: meta.block.parameters.ruby punctuation.definition.parameters.end.ruby
-      pop: true
+      set: try-regex
     - match: '{{identifier}}'
       scope: variable.parameter.ruby
     - match: ','
