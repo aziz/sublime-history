@@ -32,6 +32,15 @@ a {
 
 <h1>Dev Channel Changelog</h1>
 
+<h2>Build 3128</h2>
+<div class="release-date">Release Date: 12 April 2017</div>
+<ul>
+    <li>Fixed a gutter icon rendering regression in Windows</li>
+    <li>Fixed incorrect auto complete font size in Windows and Linux</li>
+    <li>Fixed enter not working in the side bar</li>
+    <li>Fixen an output panel crash regression</li>
+</ul>
+
 <h2>Build 3127</h2>
 <div class="release-date">Release Date: 12 April 2017</div>
 <ul>
