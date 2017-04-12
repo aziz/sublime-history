@@ -392,10 +392,16 @@ class ExecCommand(sublime_plugin.WindowCommand, ProcessListener):
     def update_phantoms(self):
         stylesheet = '''
             <style>
+                div.error-arrow {
+                    border-top: 0.4rem solid transparent;
+                    border-left: 0.5rem solid color(var(--redish) blend(var(--background) 30%));
+                    width: 0;
+                    height: 0;
+                }
                 div.error {
                     padding: 0.4rem 0 0.4rem 0.7rem;
-                    margin: 0.2rem 0;
-                    border-radius: 2px;
+                    margin: 0 0 0.2rem;
+                    border-radius: 0 0.2rem 0.2rem 0.2rem;
                 }
 
                 div.error span.message {
@@ -407,7 +413,7 @@ class ExecCommand(sublime_plugin.WindowCommand, ProcessListener):
                     padding: 0.35rem 0.7rem 0.45rem 0.8rem;
                     position: relative;
                     bottom: 0.05rem;
-                    border-radius: 0 2px 2px 0;
+                    border-radius: 0 0.2rem 0.2rem 0;
                     font-weight: bold;
                 }
                 html.dark div.error a {
@@ -437,7 +443,7 @@ class ExecCommand(sublime_plugin.WindowCommand, ProcessListener):
                     phantoms.append(sublime.Phantom(
                         sublime.Region(pt, view.line(pt).b),
                         ('<body id=inline-error>' + stylesheet +
-                            '<div class="error">' +
+                            '<div class="error-arrow"></div><div class="error">' +
                             '<span class="message">' + html.escape(text, quote=False) + '</span>' +
                             '<a href=hide>' + chr(0x00D7) + '</a></div>' +
                             '</body>'),

@@ -155,6 +155,9 @@ class EditSettingsListener(sublime_plugin.EventListener):
         if not view_settings.get('edit_settings_view'):
             return
 
+        if view.window() is None:
+            return
+
         view_settings.set('window_id', view.window().id())
 
     def on_close(self, view):

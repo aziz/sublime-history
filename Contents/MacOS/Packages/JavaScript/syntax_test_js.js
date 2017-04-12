@@ -227,6 +227,18 @@ var obj = {
      // <- meta.object-literal.key.dollar entity.name.function - punctuation.dollar
     }
 
+    [true==false ? 'one' : 'two']: false,
+//  ^ punctuation.definition.brackets
+//   ^^^^ constant.language
+//         ^^^^ constant.language
+//               ^ keyword.operator
+//                       ^ keyword.operator
+//                              ^ punctuation.definition.brackets
+//                               ^ punctuation.separator.key-value
+
+    "": true,
+    // <- meta.object-literal.key
+
     "key4": true,
     // <- meta.object-literal.key string.quoted.double
     //    ^ punctuation.separator.key-value - string
@@ -234,6 +246,21 @@ var obj = {
     // <- meta.object-literal.key string.quoted.single
     //    ^ punctuation.separator.key-value - string
     //      ^^^^^ constant.language.boolean.false
+
+    objKey: new function() {
+//              ^^^^^^^^ storage.type.function
+        this.foo = baz;
+//      ^^^^ variable.language.this
+//          ^ punctuation.accessor
+//           ^^^ meta.property
+    }(),
+
+    objKey: new class Foo() {
+//              ^^^^^ storage.type.class
+        get baz() {}
+//      ^^^ storage.type.accessor
+//          ^^^ entity.name.function
+    }(),
 
     funcKey: function() {
 //  ^^^^^^^^^^^^^^^^^^^ meta.function.declaration - meta.function.anonymous
@@ -277,13 +304,31 @@ var obj = {
     qux()
 //  ^^^^^ meta.function.declaration - meta.function.anonymous
     // <- entity.name.function
-    {}
+    {},
+
+    'funcStringMethod'() {
+//  ^^^^^^^^^^^^^^^^^^^^ meta.function.declaration - meta.function.anonymous
+    // ^ entity.name.function
+    },
+
+    'funcStringMethodWithSameLineColon'() { var foo = { name: 'jeff' }; },
+//  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.function.declaration - meta.function.anonymous
+    // ^ entity.name.function
+
+    "key (": true,
+    // <- meta.object-literal.key
+
+    "key \"(": true,
+    // <- meta.object-literal.key
+
+    "key '(": true,
+    // <- meta.object-literal.key
 
     static foo(bar) {
 //  ^^^^^^^^^^^^^^^ meta.function.declaration - meta.function.anonymous
     // ^ storage.type
     //      ^entity.name.function
-    }
+    },
 
     *baz(){
 //  ^^^^^^ meta.function.declaration - meta.function.anonymous
@@ -292,6 +337,26 @@ var obj = {
     }
 }
 // <- meta.object-literal - meta.block
+
++{
+// <- keyword.operator
+  '': +{1:} / undefined
+//^^ string.quoted
+//  ^ punctuation.separator.key-value
+//    ^ keyword.operator
+//      ^ constant.numeric
+//          ^ keyword.operator
+//            ^ constant.language
+};
+
+({
+ // <- meta.object-literal
+  0.: {0.e+0: 0}
+//^^ meta.object-literal.key constant.numeric
+//  ^ punctuation.separator.key-value
+//     ^^^^^ meta.object-literal.key constant.numeric
+//            ^ constant.numeric
+});
 
 var $ = function(baz) {
 //  ^^^^^^^^^^^^^^^^^ meta.function.declaration - meta.function.anonymous
@@ -607,6 +672,12 @@ var instance = new Constructor(param1, param2)
 //                             ^ meta.group variable.other.readwrite
 //                                           ^ meta.group punctuation.definition.group
 
+var obj = new function() {}();
+//            ^^^^^^^^ storage.type
+
+var obj2 = new class Foo{}();
+//             ^^^^^ storage.type.class
+
 this.func()
 // <- variable.language.this
 self.func()
@@ -699,8 +770,9 @@ var reg = /a+/gimy.exec('aabb')
 //               ^^^^ string.regexp
 //                 ^ keyword.operator.quantifier.regexp
 
-/a+/
+/a+(?:bc)/
 // <- string.regexp
+//  ^^ punctuation.definition.group.no-capture.regexp
 
 'foo'.bar() / baz
 //            ^ variable.other.readwrite
@@ -729,11 +801,23 @@ var result = 200 / 400 + 500 /
 100;
 
 var re = /
-//       ^ string.regexp punctuation.definition.string.begin
 [a-z]
-// ^ string.regexp.js
 /g
 // <- string.regexp.js punctuation.definition.string.end
+ // <- keyword.other
+
+const a = 1 / /This is regex./ / 'This should be a string, not a regex.';
+//          ^ keyword.operator
+//            ^ string.regexp
+//                           ^ string.regexp
+//                             ^ keyword.operator
+//                               ^ string.quoted
+
+a = /\//u + 0;
+//  ^^^^ string.regexp
+//      ^ keyword.other
+//        ^ keyword.operator
+//          ^ constant.numeric
 
 var π = 3.141592653
 //  ^ variable.other.readwrite
@@ -743,6 +827,22 @@ var angle = 2*π / count // angle between circles
 
 var angle = 2*π / count /* angle between circles */
 //              ^ keyword.operator.arithmetic
+
+undefined / (8 * 5) / "1"
+//        ^ keyword.operator.arithmetic
+//                  ^ keyword.operator.arithmetic
+
+'5' / 8 / '1'
+//  ^ keyword.operator.arithmetic
+//      ^ keyword.operator.arithmetic
+
+"5" / 8 / "1"
+//  ^ keyword.operator.arithmetic
+//      ^ keyword.operator.arithmetic
+
+`5` / 8 / `1`
+//  ^ keyword.operator.arithmetic
+//      ^ keyword.operator.arithmetic
 
 a = /foo\/bar/g // Ensure handling of escape / in regex detection
 //    ^ string.regexp
@@ -797,6 +897,15 @@ new FooBar(function(){
 var test =
 {a: 1}
 // <- meta.object-literal punctuation.definition.block
+
+var arrowFuncBraceNextLine = () => /* comments! */
+//  ^ entity.name.function
+//                              ^^ storage.type.function
+//                                 ^^^^^^^^^^^^^^^ comment
+{
+    foo.bar();
+//  ^ - entity.name.function
+}
 
 // Handle multi-line "concise" arrow function bodies
 var conciseFunc = () =>
@@ -872,3 +981,51 @@ var CONST;
 
 err = new Error();
 //        ^^^^^ support.class.error
+
+return;
+{a: 1};
+// ^ meta.block - meta.object-literal
+
+return
+{a: 1};
+// ^ meta.block - meta.object-literal
+
+const abc = new Set
+console.log('abc');
+// ^^^^ support.type.object.console
+
+const abc = new Set
+if (true) console.log('abc');
+// <- keyword.control.conditional
+
+var o = {
+    a,
+    b,
+    c // comment
+//  ^ variable.other.readwrite - entity.name.function
+//    ^^ comment
+}
+
+var query = {
+    type: type==undefined ? null : {$in: type.split(',')}
+//^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.object-literal
+//              ^^^^^^^^^ constant.language.undefined
+//                        ^ keyword.operator.ternary
+//                          ^^^^ constant.language.null
+//                               ^ keyword.operator.ternary
+//                                 ^ punctuation.definition.block.js
+//                                   ^^ meta.object-literal.key.dollar.js
+//                                     ^ punctuation.separator.key-value.js
+//                                                      ^ punctuation.definition.block
+};
+
+var str = `Hello, ${name}!`;
+//        ^^^^^^^^ string.template
+//                ^^^^^^^ meta.template.expression - string
+//                       ^^ string.template
+//                ^^ punctuation.definition.template-expression.begin
+//                  ^^^^ source.js.embedded.expression variable.other.readwrite
+//                      ^ punctuation.definition.template-expression.end
+
+let str = navigator.userAgent.toLowerCase();
+//        ^^^^^^^^^ support.type.object
