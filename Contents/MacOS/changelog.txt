@@ -34,6 +34,17 @@ article { display: block; }
 <h1>Dev Channel Changelog</h1>
 
 <article class="current">
+<h2>Build 3150</h2>
+<div class="release-date">17 October 2017</div>
+<ul>
+    <li>Fixed double drawing of selected text</li>
+    <li>Improved color scheme reloading</li>
+    <li>Goto Symbol in Project shows only definitions, not references</li>
+    <li>API: Added <tt>view.style()</tt></li>
+</ul>
+</article>
+
+<article>
 <h2>Build 3149</h2>
 <div class="release-date">13 October 2017</div>
 <ul>
@@ -72,7 +83,7 @@ article { display: block; }
 <h2>Build 3147</h2>
 <div class="release-date">6 October 2017</div>
 <ul>
-    <li>Fix a regression in 3146 that caused incorrect punctuation rendering</li>
+    <li>Fixed a regression in 3146 that caused incorrect punctuation rendering</li>
 </ul>
 </article>
 

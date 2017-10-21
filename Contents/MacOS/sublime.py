@@ -889,6 +889,9 @@ class View(object):
     def find_by_selector(self, selector):
         return sublime_api.view_find_by_selector(self.view_id, selector)
 
+    def style(self):
+        return sublime_api.view_style(self.view_id)
+
     def style_for_scope(self, scope):
         return sublime_api.view_style_for_scope(self.view_id, scope)
 
