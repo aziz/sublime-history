@@ -32,6 +32,16 @@ a {
 
 <h1>Dev Channel Changelog</h1>
 
+<h2>Build 3134</h2>
+<div class="release-date">Release Date: 9 June 2017</div>
+<ul>
+    <li>Various syntax highlighting improvements</li>
+    <li>Fixed a gutter rendering regression in 3133</li>
+    <li>minihtml: Fixed a crash triggered by bad image paths</li>
+    <li>Linux: Improved <tt>MOD3</tt> modifier key handling</li>
+    <li>API: Fixed regression in window.set_view_index()</li>
+</ul>
+
 <h2>Build 3133</h2>
 <div class="release-date">Release Date: 2 June 2017</div>
 <ul>
