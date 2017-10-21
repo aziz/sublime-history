@@ -39,7 +39,21 @@ class SelectColorSchemeCommand(sublime_plugin.WindowCommand):
         self.schemes = []
         names = []
         package_set = set()
-        for cs in sublime.find_resources('*.tmTheme'):
+
+        files = sublime.find_resources('*.tmTheme')
+        trimmed_names = set()
+        for f in files:
+            name, ext = os.path.splitext(os.path.basename(f))
+            trimmed_names.add(name)
+
+        # Add all the sublime-color-scheme files, but not the overrides
+        for f in sublime.find_resources('*.sublime-color-scheme'):
+            name, ext = os.path.splitext(os.path.basename(f))
+            if not name in trimmed_names:
+                trimmed_names.add(name)
+                files.append(f)
+
+        for cs in files:
             if self.current and cs == self.current:
                 initial_highlight = len(self.schemes)
             if len(cs.split('/', 2)) != 3:  # Not in a package

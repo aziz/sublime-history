@@ -34,6 +34,24 @@ article { display: block; }
 <h1>Dev Channel Changelog</h1>
 
 <article class="current">
+<h2>Build 3149</h2>
+<div class="release-date">13 October 2017</div>
+<ul>
+    <li>Added new color scheme format, <tt>.sublime-color-scheme</tt></li>
+    <li>Restore support for the <tt>selectionForeground</tt> color scheme key</li>
+    <li><tt>selectionForeground</tt> can now be specified on a per-scope basis</li>
+    <li>Added support for the <tt>invisibles</tt> key in color schemes</li>
+    <li>Various syntax highlighting improvements</li>
+    <li>Added <tt>Regex Replace Widget.sublime-settings</tt> and <tt>Console Input Widget.sublime-settings</tt></li>
+    <li>Word wrap is turned on by default for the console</li>
+    <li>Fixed word highlighting regression in 3148</li>
+    <li>Mac: Fixed incorrect text rendering when LCD Font Smoothing is disabled</li>
+    <li>Linux: Fixed underscores getting clipped in some fonts</li>
+    <li>API: Added <tt>view.style_for_scope()</tt></li>
+</ul>
+</article>
+
+<article>
 <h2>Build 3148</h2>
 <div class="release-date">10 October 2017</div>
 <ul>
