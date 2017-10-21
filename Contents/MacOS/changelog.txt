@@ -32,6 +32,14 @@ a {
 
 <h1>Dev Channel Changelog</h1>
 
+<h2>Build 3135</h2>
+<div class="release-date">Release Date: 12 June 2017</div>
+<ul>
+    <li>Fixed some infrequently occurring crash bugs</li>
+    <li>New windows start with an empty find history</li>
+    <li>Mac: <tt>show_navigation_bar</tt> now defaults to true</li>
+</ul>
+
 <h2>Build 3134</h2>
 <div class="release-date">Release Date: 9 June 2017</div>
 <ul>

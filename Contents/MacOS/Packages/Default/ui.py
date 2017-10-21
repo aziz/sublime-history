@@ -32,6 +32,9 @@ class SelectColorSchemeCommand(sublime_plugin.WindowCommand):
 
         self.current = self.prefs.get('color_scheme', self.DEFAULT_CS)
 
+        show_legacy = show_panel_on_build = sublime.load_settings(
+            "Preferences.sublime-settings").get("show_legacy_color_schemes", False)
+
         initial_highlight = -1
         self.schemes = []
         names = []
@@ -42,7 +45,7 @@ class SelectColorSchemeCommand(sublime_plugin.WindowCommand):
             if len(cs.split('/', 2)) != 3:  # Not in a package
                 continue
             pkg = os.path.dirname(cs)
-            if pkg == "Packages/Color Scheme - Legacy":
+            if pkg == "Packages/Color Scheme - Legacy" and not show_legacy:
                 continue
             if pkg.startswith("Packages/"):
                 pkg = pkg[len("Packages/"):]

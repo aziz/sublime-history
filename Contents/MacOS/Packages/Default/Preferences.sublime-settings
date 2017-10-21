@@ -363,8 +363,8 @@
     // OS X only: This controls if an empty window is created at startup or not.
     "create_window_at_startup": true,
 
-    // Experimental, OS X only: Show recent files on the Touch Bar
-    "show_navigation_bar": false,
+    // OS X only: Show recent files on the Touch Bar.
+    "show_navigation_bar": true,
 
     // Set to true to close windows as soon as the last file is closed, unless
     // there's a folder open within the window.
