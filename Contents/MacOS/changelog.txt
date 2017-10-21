@@ -32,6 +32,16 @@ a {
 
 <h1>Dev Channel Changelog</h1>
 
+<h2>Build 3131</h2>
+<div class="release-date">Release Date: 22 April 2017</div>
+<ul>
+    <li>Fix tab dragging crash in 3130</li>
+    <li>Fixed a further sidebar corruption issue</li>
+    <li>Fixed labels getting clipped incorrectly after changing <tt>theme_font_options</tt></li>
+    <li>Windows: Added support for no_antialias font option when using DirectWrite</li>
+    <li>Mac: Fixed gray bar on new windows when using the Adaptive theme</li>
+</ul>
+
 <h2>Build 3130</h2>
 <div class="release-date">Release Date: 21 April 2017</div>
 <ul>
