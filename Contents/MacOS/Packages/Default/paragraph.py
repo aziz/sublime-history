@@ -123,7 +123,8 @@ class WrapLinesCommand(sublime_plugin.TextCommand):
 
         prefix = ''
         for char in self.view.substr(lines[0]):
-            if ord(char) > 32 and unicodedata.category(char)[0] != 'Z':
+            cat = unicodedata.category(char)[0]
+            if ord(char) > 32 and cat != 'Z' and cat != 'P':
                 break
             prefix += char
 

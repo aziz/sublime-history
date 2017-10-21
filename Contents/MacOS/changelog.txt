@@ -32,6 +32,14 @@ a {
 
 <h1>Dev Channel Changelog</h1>
 
+<h2>Build 3129</h2>
+<div class="release-date">Release Date: 13 April 2017</div>
+<ul>
+    <li>Fixed empty sidebar issue introduced in 3127</li>
+    <li>Fixed auto complete popup not indicating matching characters</li>
+    <li>Mac: Fixed moving windows with custom title bars between retina and non-retina screens</li>
+</ul>
+
 <h2>Build 3128</h2>
 <div class="release-date">Release Date: 12 April 2017</div>
 <ul>

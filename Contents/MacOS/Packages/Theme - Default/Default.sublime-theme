@@ -633,7 +633,8 @@
     {
         "class": "progress_gauge_control",
         "layer0.tint": [171, 177, 186],
-        "layer0.opacity": 1.0
+        "layer0.opacity": 1.0,
+        "content_margin": [0, 6]
     },
 
     // Scroll Bars
