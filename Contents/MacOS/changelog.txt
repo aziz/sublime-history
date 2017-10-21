@@ -34,6 +34,23 @@ article { display: block; }
 <h1>Dev Channel Changelog</h1>
 
 <article class="current">
+<h2>Build 3148</h2>
+<div class="release-date">10 October 2017</div>
+<ul>
+    <li>Various syntax highlighting improvements</li>
+    <li>Selected text interacts properly with ligatures</li>
+    <li>Color schemes no longer support the <tt>selectionForeground</tt> key</li>
+    <li>Fixed text rendering regression that could result in clipped glyphs</li>
+    <li>Windows and Linux: Improved High DPI minimap rendering</li>
+    <li>Rulers are drawn with stippled lines</li>
+    <li>Mac: Restore drop shadows</li>
+    <li>Windows: Add drop shadows to popup windows</li>
+    <li>Windows: Support gray_antialias in conjunction with DirectWrite</li>
+    <li>API: Added automatically generated scope names for use with the regions API: <tt>region.redish</tt>, <tt>region.orangish</tt>, <tt>region.yellowish</tt>, <tt>region.greenish</tt>, <tt>region.bluish</tt>, <tt>region.purplish</tt> and <tt>region.pinkish</tt></li>
+</ul>
+</article>
+
+<article>
 <h2>Build 3147</h2>
 <div class="release-date">6 October 2017</div>
 <ul>
