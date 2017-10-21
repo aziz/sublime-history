@@ -34,6 +34,17 @@ article { display: block; }
 <h1>Dev Channel Changelog</h1>
 
 <article class="current">
+<h2>Build 3145</h2>
+<div class="release-date">5 October 2017</div>
+<ul>
+    <li>Added Goto References when hovering over a symbol</li>
+    <li>Added ligature support for symbols</li>
+    <li>Various syntax highlighting improvements, including significant improvements for Makefiles, with thanks to <a href="https://github.com/rwols">Raoul Wols</a></li>
+    <li>Windows: DirectWrite is now used by default for all fonts</li>
+</ul>
+</article>
+
+<article>
 <h2>Build 3144</h2>
 <div class="release-date">14 September 2017</div>
 <ul>

@@ -525,12 +525,20 @@ class Window(object):
         return self.template_settings_object
 
     def lookup_symbol_in_index(self, sym):
-        """ Finds all files and locations where sym in defined, using the symbol index """
+        """ Finds all files and locations where sym is defined, using the symbol index """
         return sublime_api.window_lookup_symbol(self.window_id, sym)
 
     def lookup_symbol_in_open_files(self, sym):
-        """ Finds all files and locations where sym in defined, searching through open files """
+        """ Finds all files and locations where sym is defined, searching through open files """
         return sublime_api.window_lookup_symbol_in_open_files(self.window_id, sym)
+
+    def lookup_references_in_index(self, sym):
+        """ Finds all files and locations where sym is referenced, using the symbol index """
+        return sublime_api.window_lookup_references(self.window_id, sym)
+
+    def lookup_references_in_open_files(self, sym):
+        """ Finds all files and locations where sym is referenced, searching through open files """
+        return sublime_api.window_lookup_references_in_open_files(self.window_id, sym)
 
     def extract_variables(self):
         return sublime_api.window_extract_variables(self.window_id)
@@ -1077,6 +1085,9 @@ class View(object):
 
     def indexed_symbols(self):
         return sublime_api.view_indexed_symbols(self.view_id)
+
+    def indexed_references(self):
+        return sublime_api.view_indexed_references(self.view_id)
 
     def set_status(self, key, value):
         sublime_api.view_set_status(self.view_id, key, value)

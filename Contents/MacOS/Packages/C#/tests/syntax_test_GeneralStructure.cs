@@ -148,6 +148,18 @@ namespace YourNamespace
 ///                                  ^ variable.parameter
 ///                                    ^ punctuation.terminator
 
+    public delegate FooBar YourDelegate (int a);
+///        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.delegate
+///        ^^^^^^^^ storage.type.delegate
+///                 ^^^^^^ support.type
+///                        ^^^^^^^^^^^^ variable.other.member.delegate
+///                                     ^^^^^^^ meta.delegate.parameters
+///                                     ^ punctuation.section.parameters.begin
+///                                      ^^^ storage.type
+///                                          ^ variable.parameter
+///                                           ^ punctuation.section.parameters.end
+///                                            ^ punctuation.terminator
+
     enum YourEnum
 /// ^^^^^^^^^^^^^ meta.enum
 /// ^ storage.type.enum
@@ -1017,6 +1029,26 @@ namespace TestNamespace.Test
     abc:
 /// ^^^ entity.name.label
 ///    ^ punctuation.separator
+
+        switch (test[0])
+        {
+            case 'a':
+                result += 4;
+                goto case 'b';
+///             ^^^^ keyword.control.flow.goto
+///                  ^^^^ keyword.control.switch.case
+///                       ^^^ constant.character
+///                          ^ punctuation.terminator.statement
+            case 'b':
+///         ^^^^ keyword.control.switch.case - invalid
+///              ^^^ constant.character
+///                 ^ punctuation.separator.case-statement
+                result += 6;
+                break;
+            case 'c':
+                result += 8;
+                break;
+        }
     
         "hello".OfType<char>().Where(c => c == 'l').Count());
 ///                                                        ^ invalid.illegal.stray.brace

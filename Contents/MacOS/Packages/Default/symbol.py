@@ -37,6 +37,41 @@ def lookup_symbol(window, symbol):
     return locations
 
 
+def lookup_references(window, symbol):
+    if len(symbol.strip()) < 3:
+        return []
+
+    index_locations = window.lookup_references_in_index(symbol)
+    open_file_locations = window.lookup_references_in_open_files(symbol)
+
+    def file_in_location_list(fname, locations):
+        for l in locations:
+            if l[0] == fname:
+                return True
+        return False
+
+    # Combine the two lists, overriding results in the index with results
+    # from open files, while trying to preserve the order of the files in
+    # the index.
+    locations = []
+    ofl_ignore = []
+    for l in index_locations:
+        if file_in_location_list(l[0], open_file_locations):
+            if not file_in_location_list(l[0], ofl_ignore):
+                for ofl in open_file_locations:
+                    if l[0] == ofl[0]:
+                        locations.append(ofl)
+                        ofl_ignore.append(ofl)
+        else:
+            locations.append(l)
+
+    for ofl in open_file_locations:
+        if not file_in_location_list(ofl[0], ofl_ignore):
+            locations.append(ofl)
+
+    return locations
+
+
 def symbol_at_point(view, pt):
     symbol = view.substr(view.expand_by_class(pt, sublime.CLASS_WORD_START | sublime.CLASS_WORD_END, "[]{}()<>:."))
     locations = lookup_symbol(view.window(), symbol)
@@ -196,13 +231,10 @@ class ShowDefinitions(sublime_plugin.EventListener):
 
         symbol, locations = symbol_at_point(view, point)
         locations = filter_current_symbol(view, point, symbol, locations)
-        if not locations:
+        ref_locations = lookup_references(view.window(), symbol)
+        ref_locations = filter_current_symbol(view, point, symbol, ref_locations)
+        if not locations and not ref_locations:
             return
-
-        location_map = {location_href(l): l for l in locations}
-
-        def on_navigate(href):
-            open_location(view.window(), location_map[href])
 
         links = []
         for l in locations:
@@ -210,6 +242,36 @@ class ShowDefinitions(sublime_plugin.EventListener):
                 location_href(l), format_location(l)))
         links = '<br>'.join(links)
         plural = 's' if len(locations) > 1 else ''
+
+        ref_links = []
+        for l in ref_locations:
+            ref_links.append('<a href="%s">%s</a>' % (
+                location_href(l), format_location(l)))
+        ref_plural = 's' if len(ref_links) != 1 else ''
+        ref_links = '<br>'.join(ref_links)
+
+        def on_navigate(href):
+            view.window().open_file(
+                href,
+                sublime.ENCODED_POSITION | sublime.FORCE_GROUP)
+
+        if len(locations) > 0:
+            def_section = """
+                <h1>Definition%s:</h1>
+                <p>%s</p>
+            """ % (plural, links)
+        else:
+            def_section = ""
+
+        if len(ref_locations) > 0:
+            ref_section = """
+                <h1>Reference%s:</h1>
+                <p>%s</p>
+            """ % (ref_plural, ref_links)
+            if len(def_section) != 0:
+                ref_section = "<br>" + ref_section
+        else:
+            ref_section = ""
 
         body = """
             <body id=show-definitions>
@@ -227,10 +289,10 @@ class ShowDefinitions(sublime_plugin.EventListener):
                         margin: 0;
                     }
                 </style>
-                <h1>Definition%s:</h1>
-                <p>%s</p>
+                %s
+                %s
             </body>
-        """ % (plural, links)
+        """ % (def_section, ref_section)
 
         view.show_popup(
             body,

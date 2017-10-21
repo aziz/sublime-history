@@ -3,14 +3,38 @@
 # Heading
 | <- markup.heading.1 punctuation.definition.heading
 |^^^^^^^^ markup.heading
+|        ^ meta.whitespace.newline.markdown
 
-## Second Heading
+## Second Heading #
 | <- markup.heading.2 punctuation.definition.heading
 |^^^^^^^^^^^^^^^^ markup.heading
+|  ^^^^^^^^^^^^^^ entity.name.section
+|                ^ - entity.name.section
+|                 ^ punctuation.definition.heading.end.markdown
+## Example 43 (trailing spaces!) #####    
+|                                    ^ punctuation.definition.heading.end.markdown
+|                                         ^ meta.whitespace.newline.markdown
+## Example 44 ####    >
+|^^^^^^^^^^^^^^^^^^^^^^ markup.heading
+|             ^ - punctuation.definition.heading.end.markdown
 
 Alternate Heading
 =================
 |^^^^^^^^^^^^^^^^ markup.heading.1 punctuation.definition
+
+heading underlined with dashes
+------------------------------
+| ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ markup.heading.2 punctuation.definition.heading
+
+underlined heading followed by a separator
+-------------------
+------
+| <- meta.block-level meta.separator - markup.heading
+
+underlined heading followed by another one that should be treated as a normal paragraph
+==================
+=====
+| <- - markup.heading
 
 Paragraph of text that should be scoped as meta.paragraph.
 |^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.paragraph
@@ -126,21 +150,25 @@ Paragraph break.
 |  ^ punctuation.separator.key-value
 |    ^^^^^^^^^^^^^^^^^^ markup.underline.link
 
-<div>this is HTML until <span>the corresponding closing tag</span> on the same line</div>
-| ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.disable-markdown
+<div>this is HTML until <span>there are two</span> blank lines</div>
+| ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.disable-markdown
+disabled markdown
+| <- meta.disable-markdown
+
 non-disabled markdown
 | <- - meta.disable-markdown
 
-<div>this is HTML until the closing tag on another line
-| ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.disable-markdown
+<div>this is HTML until there are two blank lines
+| ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.disable-markdown
 still <span>HTML</span>
 |      ^^^^ meta.tag.inline.any.html entity.name.tag.inline.any.html
 </div>
 | ^^^^ meta.disable-markdown
+
 non-disabled markdown
 | <- - meta.disable-markdown
 
-<div>nested tags don't count <div>test</div>
+<pre>nested tags don't count <pre>test</pre>
 |                                     ^^^^^^ meta.disable-markdown meta.tag.block.any.html
 non-disabled markdown
 | <- - meta.disable-markdown
@@ -148,17 +176,35 @@ non-disabled markdown
 <div>nested tags don't count <div>test
 |                                 ^^^^^ meta.disable-markdown
 </div>
+| ^^^ meta.disable-markdown entity.name.tag.block.any.html
+
 non-disabled markdown
 | <- - meta.disable-markdown
 
-<div>one line</div> disable
-| ^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.disable-markdown
+<div>two blank lines needed</div> to stop disabled markdown
+| ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.disable-markdown
+disabled markdown
+| <- meta.disable-markdown
+
 non-disabled markdown
 | <- - meta.disable-markdown
 
-<div>one line</div> <span>disable</span> test
-| ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.disable-markdown
-|                   ^^^^^^ meta.tag.inline.any.html
+<div>another</div> <span>disable</span> test
+| ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.disable-markdown
+|                  ^^^^^^ meta.tag.inline.any.html
+disabled markdown
+| <- meta.disable-markdown
+
+non-disabled markdown
+| <- - meta.disable-markdown
+
+*a*
+| ^ markup.italic
+<p>*a*</p>
+| ^^^^^^^^^ meta.disable-markdown - markup.italic
+*a*
+| ^^ meta.disable-markdown
+
 non-disabled markdown
 | <- - meta.disable-markdown
 
@@ -314,20 +360,6 @@ this is a raw ampersand & does not require HTML escaping
 |                                                  ^ punctuation.definition.string.begin
 |                                                                          ^ punctuation.definition.string.end
 
-heading underlined with dashes
-------------------------------
-| ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ markup.heading.2 punctuation.definition.heading
-
-underlined heading followed by a separator
--------------------
-------
-| <- meta.block-level meta.separator - markup.heading
-
-underlined heading followed by another one that should be treated as a normal paragraph
-==================
-=====
-| <- - markup.heading
-
 Paragraph followed immediately by a list, no blank line in between
 - list item 1
 | <- markup.list.unnumbered punctuation.definition.list_item
@@ -442,12 +474,6 @@ because it doesn't begin with the number one:
 
   <!-- HTML comment -->
 | ^^^^^^^^^^^^^^^^^^^^^ comment.block.html
-
-## Heading with ending hashes ##
-| <- punctuation.definition.heading
-|  ^^^^^^^^^^^^^^^^^^^^^^^^^^ entity.name.section
-|                            ^ - entity.name.section
-|                             ^^ punctuation.definition.heading
 
 *italic text <span>HTML element</span> end of italic text*
 | <- punctuation.definition.italic
@@ -1008,6 +1034,16 @@ This is *__italic bold__*
 |                     ^^ punctuation.definition.bold.end
 |                       ^ punctuation.definition.italic.end
 
+**test!_test** Issue 1163
+|^^^^^^^^^^^^^ markup.bold
+|      ^ - punctuation.definition.italic
+|           ^^ punctuation.definition.bold.end
+
+__test!*test__ Issue 1163
+|^^^^^^^^^^^^^ markup.bold
+|      ^ - punctuation.definition.italic
+|           ^^ punctuation.definition.bold.end
+
 ```js
 | <- punctuation.definition.raw.code-fence.begin
 |  ^^ constant.other.language-name
@@ -1364,6 +1400,12 @@ not a table |
 |^ invalid.deprecated.unescaped-backticks
 |      ^ punctuation.separator.table-cell
 
+A line without bolded |
+|                     ^ - punctuation.separator.table-cell
+
+A line with bolded **|**
+|                    ^ - punctuation.separator.table-cell
+
 1. test
 |  ^^^^^ markup.list.numbered meta.paragraph.list
    - test
@@ -1396,3 +1438,213 @@ paragraph
   * List Item 3
     Text under Item 3
 |   ^^^^^^^^^^^^^^^^^^ markup.list.unnumbered meta.paragraph.list - markup.raw
+
+ 1. fenced code block inside a list item
+| ^ punctuation.definition.list_item
+    ```language
+|^^^^^^^^^^^^^^^ meta.paragraph.list
+|   ^^^ punctuation.definition.raw.code-fence.begin
+|      ^^^^^^^^ constant.other.language-name
+|   ^^^^^^^^^^^ markup.raw.code-fence
+    
+|^^^^ meta.paragraph.list markup.raw.code-fence
+    ```
+|   ^^^ punctuation.definition.raw.code-fence.end
+    test
+|   ^^^^^ meta.paragraph.list - markup.raw.code-fence
+
+ 2. test
+| ^ punctuation.definition.list_item
+Example 116:
+
+Normal paragraph
+| <- meta.paragraph - markup
+<table><tr><td>
+<pre>
+**Hello**,
+| ^^^^^^^^^ meta.disable-markdown
+
+_world_.
+| ^^^^ markup.italic - meta.disable-markdown
+</pre>
+</td></tr></table>
+
+Example 120:
+
+<DIV CLASS="foo">
+| ^^^^^^^^^^^^^^^^ meta.disable-markdown
+
+*Markdown*
+| ^^^^^^^ meta.paragraph markup.italic - meta.disable-markdown
+
+</DIV>
+| ^^^ meta.disable-markdown meta.tag.block.any.html
+
+Example 127:
+
+<div><a href="bar">*foo*</a></div>
+|                  ^^^^^ meta.disable-markdown - markup.italic
+
+Example 129:
+
+<div></div>
+``` c
+int x = 33;
+```
+| ^^ meta.disable-markdown
+
+Example 130:
+
+<a href="foo">
+*bar*
+|^^^^^ meta.disable-markdown
+</a>
+
+Example 131:
+
+<Warning>
+*bar*
+|^^^^^ meta.disable-markdown
+</Warning>
+| ^^^^^^^ meta.disable-markdown meta.tag.other.html entity.name.tag.other.html
+
+Example 135:
+
+<del>
+| ^^ meta.disable-markdown meta.tag.inline.any.html entity.name.tag.inline.any.html
+
+*foo*
+| ^^ meta.paragraph markup.italic
+
+</del>
+| ^^^ meta.disable-markdown meta.tag.inline.any.html entity.name.tag.inline.any.html
+
+<del>
+*foo*
+|^^^^^ meta.disable-markdown
+</del>
+
+Example 136:
+
+<del>*foo*</del>
+| ^^ meta.tag.inline.any.html entity.name.tag.inline.any.html
+|    ^^^^^ markup.italic
+|           ^^^ meta.tag.inline.any.html entity.name.tag.inline.any.html
+|^^^^^^^^^^^^^^^ meta.paragraph - meta.disable-markdown
+
+Example 137:
+
+<pre language="haskell"><code>
+| ^^ meta.disable-markdown meta.tag.block.any.html entity.name.tag.block.any.html
+import Text.HTML.TagSoup
+
+main :: IO ()
+| ^^^^^^^^^^^^ meta.disable-markdown
+main = print $ parseTags tags
+</code></pre>
+| ^^^^^^^^^^^ meta.disable-markdown
+|        ^^^ meta.tag.block.any.html entity.name.tag.block.any.html
+okay
+| <- - meta.disable-markdown
+
+Example 138:
+
+<script type="text/javascript">
+| ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.disable-markdown meta.tag.script.begin.html
+// JavaScript example
+| ^^^^^^^^^^^^^^^^^^^^ meta.disable-markdown source.js.embedded.html comment.line.double-slash.js
+
+document.getElementById("demo").innerHTML = "Hello JavaScript!";
+| ^^^^^^ meta.disable-markdown source.js.embedded.html support.type.object.dom.js
+</script>
+| ^^^^^^ meta.disable-markdown meta.tag.script.end.html entity.name.tag.script.html
+okay
+| <- - meta.disable-markdown
+
+Example 139:
+
+<style
+  type="text/css">
+| ^^^^^^^^^^^^^^^ meta.disable-markdown meta.tag.style.begin.html meta.attribute-with-value.html
+h1 {color:red;}
+|   ^^^^^ meta.disable-markdown source.css.embedded.html meta.property-list.css meta.property-name.css support.type.property-name.css
+
+p {color:blue;}
+|  ^^^^^ meta.disable-markdown source.css.embedded.html meta.property-list.css meta.property-name.css support.type.property-name.css
+</style>
+| ^^^^^ meta.disable-markdown meta.tag.style.end.html entity.name.tag.style.html
+okay
+| <- - meta.disable-markdown
+
+Example 143:
+
+<style>p{color:red;}</style>
+| ^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.disable-markdown
+*foo*
+| <- - meta.disable-markdown
+
+Example 144:
+
+<!-- foo -->*bar*
+| ^^^^^^^^^^ comment.block.html
+|           ^^^^^ meta.disable-markdown
+*baz*
+| <- - meta.disable-markdown
+
+Example 145:
+
+<script>
+foo
+</script>1. *bar*
+| ^^^^^^^^^^^^^^^^ meta.disable-markdown
+okay
+| <- - meta.disable-markdown
+
+Example 146:
+
+<!-- Foo
+| ^^ meta.disable-markdown comment.block.html punctuation.definition.comment
+
+bar
+   baz -->
+| ^^^^^^^^ meta.disable-markdown comment.block.html
+okay
+| <- - meta.disable-markdown
+
+Example 147:
+
+<?php
+| ^^^^ meta.disable-markdown
+
+  echo '>';
+
+?>
+|^^ meta.disable-markdown
+okay
+| <- - meta.disable-markdown
+
+Example 148:
+
+<!DOCTYPE html>
+| ^^^^^^^ meta.disable-markdown meta.tag.sgml.html meta.tag.sgml.doctype.html entity.name.tag.doctype.html
+okay
+| <- - meta.disable-markdown
+
+Example 149:
+
+<![CDATA[
+| ^^^^^^^^ meta.disable-markdown meta.tag.sgml.html constant.other.inline-data.html
+function matchwo(a,b)
+{
+  if (a < b && a < 0) then {
+    return 1;
+
+  } else {
+
+    return 0;
+  }
+}
+]]>
+|^ meta.disable-markdown meta.tag.sgml.html constant.other.inline-data.html
+okay
+| <- - meta.disable-markdown
