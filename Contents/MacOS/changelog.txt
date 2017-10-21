@@ -5,7 +5,7 @@ html {
 }
 body {
     color: #333;
-    font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-family: "Open Sans", "Helvetica Neue", "Segoe UI", Helvetica, Arial, sans-serif;
 }
 ul {
     padding-left: 1.2rem;
@@ -31,6 +31,25 @@ a {
 </style>
 
 <h1>Dev Channel Changelog</h1>
+
+<h2>Build 3137</h2>
+<div class="release-date">Release Date: 20 June 2017</div>
+<ul>
+    <li>Various syntax highlighting improvements</li>
+    <li>Fixed an issue with the console scroll area sticking to bottom</li>
+    <li>Fixed an issue where multiple indexing status windows could be shown</li>
+    <li>Added backwards compatibility for old themes that were seeing hidden sidebar icons</li>
+    <li>Fixed some additional infrequently occurring crash bugs</li>
+    <li>Fixed empty panes on startup when <tt>hot_exit</tt> was set to false</li>
+    <li>Fixed an issue with incorrect row highlighting in the sidebar</li>
+    <li>Linux: Update X11 selection on clipboard every time selection changes</li>
+    <li>Windows: Further improvements to touch pad scrolling</li>
+    <li>Windows: Improved file change detection robustness</li>
+    <li>Windows: Improved font selection logic</li>
+    <li>Windows: Fix ctrl+` shortcut for UK (ISO) keyboards</li>
+    <li>Mac: Fix window shifting down when changing the color scheme while using the Adaptive theme</li>
+    <li>API: Fixed a bug causing incorrect phantom contents</li>
+</ul>
 
 <h2>Build 3136</h2>
 <div class="release-date">Release Date: 13 June 2017</div>
