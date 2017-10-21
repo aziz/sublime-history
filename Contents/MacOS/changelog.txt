@@ -34,8 +34,8 @@ article { display: block; }
 <h1>Dev Channel Changelog</h1>
 
 <article class="current">
-<h2>Build 3151</h2>
-<div class="release-date">19 October 2017</div>
+<h2>Build 3152</h2>
+<div class="release-date">20 October 2017</div>
 <ul>
     <li>Added <tt>goto_reference</tt> command to the Goto menu</li>
     <li>Fixed not being able to grab the scrollbar by clicking on the rightmost pixels of the window</li>
