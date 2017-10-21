@@ -36,9 +36,9 @@ class EditSettingsCommand(sublime_plugin.ApplicationCommand):
             'platform': platform_name,
         }
 
-        base_file = sublime.expand_variables(base_file, variables)
+        base_file = sublime.expand_variables(base_file.replace('\\', '\\\\'), variables)
         if user_file is not None:
-            user_file = sublime.expand_variables(user_file, variables)
+            user_file = sublime.expand_variables(user_file.replace('\\', '\\\\'), variables)
 
         base_path = base_file.replace('${packages}', 'res://Packages')
         is_resource = base_path.startswith('res://')

@@ -32,6 +32,28 @@ a {
 
 <h1>Dev Channel Changelog</h1>
 
+<h2>Build 3132</h2>
+<div class="release-date">Release Date: 26 May 2017</div>
+<ul>
+    <li>Added new color schemes Breakers, Mariana and Sixteen, derived from the excellent work of Chris Kempson and Dmitri Voronianski</li>
+    <li>Removed legacy color schemes, and moved them into an optional package on Package Control</li>
+    <li>Improved the Adaptive theme</li>
+    <li>Improved visible whitespace rendering on HiDPI displays</li>
+    <li>Linux: Added <a href="https://www.sublimetext.com/docs/3/linux_repositories.html">repositories</a> for apt, yum and pacman</li>
+    <li>Various syntax highlighting improvements, including significant improvements for R, with thanks to <a href="https://github.com/randy3k">randy3k</a></li>
+    <li>Various regex handling improvements in the Find panel</li>
+    <li>Add command equivalents for Find in Files panel</li>
+    <li>OSX: Added basic Touch Bar support</li>
+    <li>Fixed text widgets cutting off the bottom pixel of their selection border</li>
+    <li>Fixed an issue with <tt>close_windows_when_empty</tt> in empty session</li>
+    <li>Fix Open Containing Folder on Windows with a folder containing a comma</li>
+    <li>Fix multi-cursor pasting when clipboard contains one or more full lines</li>
+    <li>Prevent UNC paths from being mangled by edit_settings</li>
+    <li>minihtml: Fix a crash from non-existent CSS vars</li>
+    <li>Themes: Default to font.size = 11 when theme doesn't specify size</li>
+    <li>API: Fixed selector scoring with the &amp; operator</li>
+</ul>
+
 <h2>Build 3131</h2>
 <div class="release-date">Release Date: 22 April 2017</div>
 <ul>

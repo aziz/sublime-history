@@ -304,6 +304,9 @@
     // Show folders in the side bar in bold
     "bold_folder_labels": false,
 
+    // Draw divider lines between sections of the UI when using the Adaptive theme
+    "adaptive_dividers": true,
+
     // OS X only. Valid values are true, false, and "auto". Auto will enable
     // the setting when running on a screen 2560 pixels or wider (i.e., a
     // Retina display). When this setting is enabled, OpenGL is used to
@@ -359,6 +362,9 @@
 
     // OS X only: This controls if an empty window is created at startup or not.
     "create_window_at_startup": true,
+
+    // Experimental, OS X only: Show recent files on the Touch Bar
+    "show_navigation_bar": false,
 
     // Set to true to close windows as soon as the last file is closed, unless
     // there's a folder open within the window.

@@ -366,12 +366,8 @@
     {
         "class": "scroll_tabs_left_button",
         "layer0.texture": "Theme - Default/common/light/tab_scroll_left.png",
+        "layer0.opacity": { "target": 0.6, "speed": 4.0, "interpolation": "smoothstep" },
         "content_margin": [9, 10]
-    },
-    {
-        "class": "scroll_tabs_left_button",
-        "attributes": ["!hover"],
-        "layer0.opacity": { "target": 0.6, "speed": 4.0, "interpolation": "smoothstep" }
     },
     {
         "class": "scroll_tabs_left_button",
@@ -459,7 +455,7 @@
     {
         "class": "grid_layout_control",
         "border_color": ["background", 255, 255, 255, 0.25],
-        "border_size": 1
+        "border_size": 2
     },
     {
         "class": "grid_layout_control",
@@ -594,7 +590,7 @@
         "class": "panel_control",
         "layer0.tint": [199, 203, 209],
         "layer0.opacity": 1.0,
-        "content_margin": 0
+        "content_margin": 2
     },
     {
         "class": "panel_control",
@@ -1025,7 +1021,7 @@
         "class": "status_bar",
         "layer0.tint": [171, 177, 186],
         "layer0.opacity": 1.0,
-        "content_margin": [8, 0, 4, 0]
+        "content_margin": [8, 0, 8, 0]
     },
     {
         "class": "panel_button_control",
