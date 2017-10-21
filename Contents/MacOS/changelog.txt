@@ -32,6 +32,14 @@ a {
 
 <h1>Dev Channel Changelog</h1>
 
+<h2>Build 3136</h2>
+<div class="release-date">Release Date: 13 June 2017</div>
+<ul>
+    <li>Fixed a session restore regression in 3136 with large session files</li>
+    <li>Windows: Improved touch pad scrolling</li>
+    <li>Dragging a tab into a new window preserves the find history</li>
+</ul>
+
 <h2>Build 3135</h2>
 <div class="release-date">Release Date: 12 June 2017</div>
 <ul>

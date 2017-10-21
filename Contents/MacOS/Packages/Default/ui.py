@@ -32,7 +32,7 @@ class SelectColorSchemeCommand(sublime_plugin.WindowCommand):
 
         self.current = self.prefs.get('color_scheme', self.DEFAULT_CS)
 
-        show_legacy = show_panel_on_build = sublime.load_settings(
+        show_legacy = sublime.load_settings(
             "Preferences.sublime-settings").get("show_legacy_color_schemes", False)
 
         initial_highlight = -1
