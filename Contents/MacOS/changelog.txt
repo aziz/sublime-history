@@ -32,6 +32,16 @@ a {
 
 <h1>Dev Channel Changelog</h1>
 
+<h2>Build 3140</h2>
+<div class="release-date">Release Date: 30 June 2017</div>
+<ul>
+    <li>Improved minihtml drawing performance in a couple of specific situations</li>
+    <li>Fixed a regression from 3138 where build output panel would not automatically scroll to the end</li>
+    <li>Backwards compatibility for sidebar icon opacity has been made more specific</li>
+    <li>Windows: Fixed selection of Consolas Bold on Windows 7</li>
+    <li>Mac: Resolved some edge cases with custom title bars and native fullscreen</li>
+</ul>
+
 <h2>Build 3139</h2>
 <div class="release-date">Release Date: 20 June 2017</div>
 <ul>
