@@ -34,6 +34,23 @@ article { display: block; }
 <h1>Dev Channel Changelog</h1>
 
 <article class="current">
+<h2>Build 3151</h2>
+<div class="release-date">19 October 2017</div>
+<ul>
+    <li>Added <tt>goto_reference</tt> command to the Goto menu</li>
+    <li>Fixed not being able to grab the scrollbar by clicking on the rightmost pixels of the window</li>
+    <li>Fixed a regression where visible whitespace wasn't drawn correctly in conjunction with code folding</li>
+    <li>Fix double clicking on the selection not setting input focus when drag_drop is enabled</li>
+    <li>Color Schemes can specify <tt>bold</tt> and <tt>italic</tt> in the brackets_options key</li>
+    <li>Fix font_style typo when parsing <tt>.sublime-color-scheme</tt> files</li>
+    <li><tt>.sublime-color-scheme</tt>: "defaults" has been renamed to "globals"</li>
+    <li>Windows: Removed drop shadows due to Windows not handling them correctly</li>
+    <li>API: Regions are able to change the foreground color again</li>
+    <li>API: Improve <tt>View.find()</tt> and <tt>View.find_all()</tt> performance when doing literal matches</li>
+</ul>
+</article>
+
+<article>
 <h2>Build 3150</h2>
 <div class="release-date">17 October 2017</div>
 <ul>

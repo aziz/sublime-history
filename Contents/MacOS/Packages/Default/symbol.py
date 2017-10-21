@@ -83,6 +83,17 @@ def symbol_at_point(view, pt):
     return symbol, locations
 
 
+def reference_at_point(view, pt):
+    symbol = view.substr(view.expand_by_class(pt, sublime.CLASS_WORD_START | sublime.CLASS_WORD_END, "[]{}()<>:."))
+    locations = lookup_references(view.window(), symbol)
+
+    if len(locations) == 0:
+        symbol = view.substr(view.word(pt))
+        locations = lookup_references(view.window(), symbol)
+
+    return symbol, locations
+
+
 def open_location(window, l):
     fname, display_fname, rowcol = l
     row, col = rowcol
@@ -181,6 +192,22 @@ class GotoDefinition(sublime_plugin.WindowCommand):
             symbol, locations = symbol_at_point(v, pt)
         else:
             locations = lookup_symbol(self.window, symbol)
+
+        navigate_to_symbol(v, symbol, locations)
+
+
+class GotoReference(sublime_plugin.WindowCommand):
+    def run(self, symbol=None):
+        v = self.window.active_view()
+
+        if not symbol and not v:
+            return
+
+        if not symbol:
+            pt = v.sel()[0]
+            symbol, locations = reference_at_point(v, pt)
+        else:
+            locations = lookup_references(self.window, symbol)
 
         navigate_to_symbol(v, symbol, locations)
 
