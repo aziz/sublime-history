@@ -32,6 +32,13 @@ a {
 
 <h1>Dev Channel Changelog</h1>
 
+<h2>Build 3141</h2>
+<div class="release-date">Release Date: 7 July 2017</div>
+<ul>
+    <li>Find settings, but not history, are now inherited by new windows</li>
+    <li>Fixed a rare crash that could occur when dragging tabs</li>
+</ul>
+
 <h2>Build 3140</h2>
 <div class="release-date">Release Date: 30 June 2017</div>
 <ul>
