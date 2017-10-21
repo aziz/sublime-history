@@ -144,7 +144,10 @@ class SelectColorSchemeCommand(sublime_plugin.WindowCommand):
         """
 
         vcs = view.settings().get('color_scheme', self.DEFAULT_CS)
-        pcs = self.window.project_data().get('settings', {}).get('color_scheme')
+        pd = self.window.project_data()
+        pcs = None
+        if pd is not None:
+            pcs = pd.get('settings', {}).get('color_scheme')
         gcs = self.prefs.get('color_scheme')
 
         if pcs is not None and vcs != pcs:

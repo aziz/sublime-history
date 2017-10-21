@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-7z x "Sublime Text Build 3129.dmg" > /dev/null 2>&1
+find . -type f -name *.dmg -exec 7z x \{\} \; > /dev/null 2>&1
 cp -r ./Sublime\ Text/Sublime\ Text.app/Contents/ .
 rm -Rf ./Sublime\ Text
 rm *.dmg

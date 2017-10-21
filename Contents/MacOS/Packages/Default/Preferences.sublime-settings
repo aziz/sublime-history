@@ -18,6 +18,9 @@
     // "subpixel_antialias", "no_round" (OS X only), "gdi" (Windows only) and
     // "directwrite" (Windows only)
     "font_options": [],
+    // Font options for theme text. Valid options are: "no_antialias",
+    // "gray_antialias", "gdi" (Windows only) and "directwrite" (Windows only)
+    "theme_font_options": [],
 
     // Characters that are considered to separate words
     "word_separators": "./\\()\"'-:,.;<>~!@#$%^&*|+=[]{}`~?",

@@ -2,19 +2,18 @@
 <plist version="1.0">
 <dict>
 	<key>name</key>
-	<string>Symbol List: Method</string>
+	<string>Symbol List: Enums</string>
 	<key>scope</key>
-	<string><![CDATA[(meta.class.body.cs, meta.interface.body.cs) & meta.method.cs entity.name.function]]></string>
+	<string>source.cs entity.name.enum</string>
 	<key>settings</key>
 	<dict>
 		<key>showInSymbolList</key>
 		<integer>1</integer>
 		<key>showInIndexedSymbolList</key>
-		<integer>1</integer>
+		<string>1</string>
 		<key>symbolTransformation</key>
 		<string>
-			s/\s{2,}/ /g; # collapse whitespace
-			s/^\s*/  /;   # indent by two spaces
+		s/^/enum /;
 		</string>
 	</dict>
 </dict>

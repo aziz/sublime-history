@@ -32,6 +32,20 @@ a {
 
 <h1>Dev Channel Changelog</h1>
 
+<h2>Build 3130</h2>
+<div class="release-date">Release Date: 21 April 2017</div>
+<ul>
+    <li>Fixed sidebar corruption issue in 3127</li>
+    <li>Fixed Reveal in Sidebar regression in 3127</li>
+    <li>Added setting <tt>theme_font_options</tt> to control font rendering of UI elements</li>
+    <li>Improved auto indent rules for HTML and PHP</li>
+    <li>C#: Improved symbol handling</li>
+    <li>Markdown: Improved symbol handling</li>
+    <li>Mac: Improved handling of themed title bar</li>
+    <li>Windows: Improved fallback font handling in UI elements</li>
+    <li>Windows: Fixed visual style regression in 3127</li>
+</ul>
+
 <h2>Build 3129</h2>
 <div class="release-date">Release Date: 13 April 2017</div>
 <ul>
@@ -46,7 +60,7 @@ a {
     <li>Fixed a gutter icon rendering regression in Windows</li>
     <li>Fixed incorrect auto complete font size in Windows and Linux</li>
     <li>Fixed enter not working in the side bar</li>
-    <li>Fixen an output panel crash regression</li>
+    <li>Fixed an output panel crash regression</li>
 </ul>
 
 <h2>Build 3127</h2>
