@@ -892,6 +892,27 @@
 /*                                                                                       ^^^^^^^^^^ -entity.name.tag.custom.css */
 /*                                                                                                  ^^^^^ -entity.name.tag.custom.css */
 
+.test-property-name-order-doesnt-prevent-full-matches {
+    grid-template-rows: none;
+/*  ^^^^^^^^^^^^^^^^^^ support.type.property-name */
+/*                    ^ punctuation.separator.key-value */
+    grid-template-columns: none;
+/*  ^^^^^^^^^^^^^^^^^^^^^ support.type.property-name */
+/*                       ^ punctuation.separator.key-value */
+    grid-template-areas: auto;
+/*  ^^^^^^^^^^^^^^^^^^^ support.type.property-name */
+/*                     ^ punctuation.separator.key-value */
+    grid-template: initial;
+/*  ^^^^^^^^^^^^^ support.type.property-name */
+/*               ^ punctuation.separator.key-value */
+    grid-row-gap: 3vmin;
+/*  ^^^^^^^^^^^^ support.type.property-name */
+/*              ^ punctuation.separator.key-value */
+    grid-row: auto;
+/*  ^^^^^^^^ support.type.property-name */
+/*          ^ punctuation.separator.key-value */
+}
+
 .test-meta-scopes-for-completions {
     top: 5px;
 /*^^^^^^^^^^^ meta.property-list */
@@ -920,4 +941,21 @@
 .generic-font-family4 {
     font-family: droid serif;
 /*               ^^^^^^^^^^^ string.unquoted */
+}
+
+.variable-beginnings {
+    --1x: url(data:image/png;base64,PNG);
+/*  ^^^^ support.type.custom-property */
+/*  ^^ punctuation.definition.custom-property */
+/*    ^^ support.type.custom-property.name */
+/*      ^ punctuation.separator.key-value */
+    background-image: var(--1x);
+/*                        ^^^^ support.type.custom-property */
+/*                        ^^ punctuation.definition.custom-property */
+/*                          ^^ support.type.custom-property.name */
+    --\ff: 5px;
+/*  ^^^^^ support.type.custom-property */
+/*  ^^ punctuation.definition.custom-property */
+/*    ^^^ support.type.custom-property.name */
+/*       ^ punctuation.separator.key-value */
 }

@@ -192,6 +192,10 @@ class AutomaticPaneCloser(sublime_plugin.EventListener):
         if sublime_api.window_is_dragging(window.id()):
             return
 
+        # Only close panes when closing the transient sheet
+        if view.size() != 0 or view.file_name() is not None:
+            return
+
         # Maintain the focused group, which is required if the group being
         # closed is not focused (perhaps sheet was closed with the mouse)
         focused_group = window.active_group()

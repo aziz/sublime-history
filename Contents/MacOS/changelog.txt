@@ -32,6 +32,17 @@ a {
 
 <h1>Dev Channel Changelog</h1>
 
+<h2>Build 3142</h2>
+<div class="release-date">Release Date: 27 July 2017</div>
+<ul>
+    <li>Improved responsiveness when the system is under high CPU load</li>
+    <li>Fixed flash-of-white that could occur when the auto complete window is closed</li>
+    <li>Some minor HiDPI improvements under Windows and Linux</li>
+    <li>Various syntax highlighting improvements</li>
+    <li>Disable scroll animation when animation_enabled is false in settings</li>
+    <li>API: Add View.text_to_window() and View.layout_to_window()</li>
+</ul>
+
 <h2>Build 3141</h2>
 <div class="release-date">Release Date: 7 July 2017</div>
 <ul>
