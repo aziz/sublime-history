@@ -32,6 +32,25 @@ a {
 
 <h1>Dev Channel Changelog</h1>
 
+<h2>Build 3133</h2>
+<div class="release-date">Release Date: 2 June 2017</div>
+<ul>
+    <li>Fixed a visible whitespace regression in 3132</li>
+    <li>Fixed a multiple selection paste regression in 3132</li>
+    <li>Mac: Handle layout changes due to macOS Sierra tabs</li>
+    <li>Mac: Improved default web browser detection</li>
+    <li>Find in Files panel now responds to <tt>find_all</tt> and <tt>replace_all</tt> commands</li>
+    <li>Improved rendering performance with a large number of gutter icons</li>
+    <li>Tweaked auto complete colors</li>
+    <li>Fixed fold markers not properly respecting line padding</li>
+    <li>Files can now be renamed when only the case has changed</li>
+    <li>Legacy color schemes are back, but hidden</li>
+    <li>minihtml: Fixed layout of html popups on Windows and Linux under HiDPI</li>
+    <li>minihtml: Fixed crash when doctype is present</li>
+    <li>API: Fixed input panel not running on_cancel when re-showing the input panel</li>
+    <li>API: Fixed crash in window.set_view_index()</li>
+</ul>
+
 <h2>Build 3132</h2>
 <div class="release-date">Release Date: 26 May 2017</div>
 <ul>
@@ -43,7 +62,7 @@ a {
     <li>Various syntax highlighting improvements, including significant improvements for R, with thanks to <a href="https://github.com/randy3k">randy3k</a></li>
     <li>Various regex handling improvements in the Find panel</li>
     <li>Add command equivalents for Find in Files panel</li>
-    <li>OSX: Added basic Touch Bar support</li>
+    <li>Mac: Added basic Touch Bar support</li>
     <li>Fixed text widgets cutting off the bottom pixel of their selection border</li>
     <li>Fixed an issue with <tt>close_windows_when_empty</tt> in empty session</li>
     <li>Fix Open Containing Folder on Windows with a folder containing a comma</li>

@@ -237,7 +237,10 @@ class ExecCommand(sublime_plugin.WindowCommand, ProcessListener):
             if shell_cmd:
                 print("Running " + shell_cmd)
             elif cmd:
-                print("Running " + " ".join(cmd))
+                cmd_string = cmd
+                if not isinstance(cmd, str):
+                    cmd_string = " ".join(cmd)
+                print("Running " + cmd_string)
             sublime.status_message("Building")
 
         show_panel_on_build = sublime.load_settings("Preferences.sublime-settings").get("show_panel_on_build", True)

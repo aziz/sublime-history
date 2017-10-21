@@ -532,18 +532,24 @@
         "class": "auto_complete",
         "row_padding": [4, 1, 4, 1],
         "tint_index": 0,
-        "layer0.opacity": 1.0
+        "layer0.opacity": 1.0,
+        "tint_modifier": [255, 255, 255, 0.05],
     },
     {
         "class": "auto_complete",
-        "attributes": ["file_medium_dark"],
-        "tint_modifier": [255, 255, 255, 0.06],
+        "attributes": ["file_light"],
+        "tint_modifier": [0, 0, 0, 0.05],
+    },
+    {
+        "class": "scroll_bar_control",
+        "parents": [{"class": "popup_control auto_complete_popup"}],
+        "tint_modifier": [0, 0, 0, 0.05],
     },
     {
         "class": "scroll_bar_control",
         "attributes": ["dark"],
         "parents": [{"class": "popup_control auto_complete_popup"}],
-        "tint_modifier": [255, 255, 255, 0.06],
+        "tint_modifier": [255, 255, 255, 0.05],
     },
     {
         "class": "table_row",

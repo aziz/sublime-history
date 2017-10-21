@@ -42,6 +42,8 @@ class SelectColorSchemeCommand(sublime_plugin.WindowCommand):
             if len(cs.split('/', 2)) != 3:  # Not in a package
                 continue
             pkg = os.path.dirname(cs)
+            if pkg == "Packages/Color Scheme - Legacy":
+                continue
             if pkg.startswith("Packages/"):
                 pkg = pkg[len("Packages/"):]
             name, ext = os.path.splitext(os.path.basename(cs))
